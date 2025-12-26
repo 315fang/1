@@ -1,0 +1,24 @@
+# public/admin/config.yml
+backend:
+  name: github
+  repo: your-username/your-repo-name
+  branch: main
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "artworks"
+    label: "作品集"
+    folder: "src/content/artworks"
+    create: true
+    slug: "{{title}}"
+    format: "json"
+    fields:
+      - {label: "标题 (中文)", name: "title", widget: "string"}
+      - {label: "标题 (英文)", name: "enTitle", widget: "string"}
+      - {label: "封面图", name: "imageUrl", widget: "image"}
+      - {label: "作者", name: "author", widget: "string", default: "五月糖"}
+      - {label: "创作日期", name: "date", widget: "datetime", format: "YYYY.MM.DD"}
+      - {label: "标签", name: "tags", widget: "list"}
+      - {label: "描述", name: "description", widget: "text"}
