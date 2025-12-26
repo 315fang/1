@@ -1,8 +1,10 @@
 # public/admin/config.yml
 backend:
   name: github
-  repo: your-username/your-repo-name
+  repo: 315fang/1
   branch: main
+  base_url: https://1-woad-pi.vercel.app
+  auth_endpoint: api/auth
 
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
