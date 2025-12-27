@@ -1,0 +1,9 @@
+{
+  "title": "测试作品",
+  "enTitle": "Test Artwork",
+  "imageUrl": "https://images.unsplash.com/photo-1681548142719-9ff1eb1dfac6?w=1080",
+  "author": "五月糖",
+  "date": "2025.01.01",
+  "description": "这是第一条来自文件的数据，证明系统已打通。",
+  "tags": ["测试", "CMS"]
+}

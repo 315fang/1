@@ -21,59 +21,22 @@ interface Artwork {
   tags: string[];
 }
 
-// --- 3. 数据源 ---
-const artworks: Artwork[] = [
-  {
-    id: 1,
-    title: '流体之梦',
-    enTitle: 'Fluid Dreams',
-    imageUrl: 'https://images.unsplash.com/photo-1681548142719-9ff1eb1dfac6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-    author: '五月糖',
-    date: '2025.05.20',
-    description: '在色彩的洪流中，寻找内心的宁静。每一次流动都是意识的延伸。尝试捕捉液体瞬间的张力与柔美。',
-    tags: ['摄影', '抽象', '色彩']
-  },
-  {
-    id: 2,
-    title: '霓虹迷境',
-    enTitle: 'Neon Ambience',
-    imageUrl: 'https://images.unsplash.com/photo-1660832517688-dc437970a63c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-    author: '五月糖',
-    date: '2025.11.28',
-    description: '玻璃与光的对话，虚实之间的诗。城市在夜色中溶解，只留下光影的残像。',
-    tags: ['3D渲染', '光影', '赛博朋克']
-  },
-  {
-    id: 3,
-    title: '星际回响',
-    enTitle: 'Interstellar Echo',
-    imageUrl: 'https://images.unsplash.com/photo-1747263709734-d30db0a62c4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-    author: '五月糖',
-    date: '2025.10.15',
-    description: '宇宙深处传来的呼唤，超越时空的回响。探索未知的边界，想象未来的形态。',
-    tags: ['概念设计', '宇宙', '未来']
-  },
-    {
-    id: 4,
-    title: '量子涟漪',
-    enTitle: 'Quantum Ripples',
-    imageUrl: 'https://images.unsplash.com/photo-1579792685643-a4bb28186899?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-    author: '五月糖',
-    date: '2025.09.22',
-    description: '微观世界的宏大叙事，粒子的舞蹈。肉眼不可见的世界，在想象中构建。',
-    tags: ['数字艺术', '粒子', '物理']
-  },
-  {
-    id: 5,
-    title: '全息幻影',
-    enTitle: 'Holographic Illusion',
-    imageUrl: 'https://images.unsplash.com/photo-1644901718794-0a2e63d1f806?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
-    author: '五月糖',
-    date: '2025.08.07',
-    description: '投射在现实边缘的虚构，真实与幻觉的交界。对虚拟现实的一种视觉隐喻。',
-    tags: ['全息', '视觉实验', '维度']
-  }
-];
+// --- 3. 数据源 (动态读取 src/content/artworks 下的所有 JSON) ---
+const artworkModules = import.meta.glob('../content/artworks/*.json', { eager: true });
+
+const artworks: Artwork[] = Object.values(artworkModules).map((mod: any, index) => {
+  const data = mod.default || mod;
+  return {
+    id: index + 1,
+    title: data.title,
+    enTitle: data.enTitle,
+    imageUrl: data.imageUrl,
+    author: data.author,
+    date: data.date,
+    description: data.description,
+    tags: data.tags || []
+  };
+});
 
 // --- 4. 核心组件定义 ---
 
