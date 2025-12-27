@@ -22,7 +22,7 @@ interface Artwork {
 }
 
 // --- 3. 数据源 (动态读取 src/content/artworks 下的所有 JSON) ---
-const artworkModules = import.meta.glob('../content/artworks/*.json', { eager: true });
+const artworkModules = import.meta.glob('./content/artworks/*.json', { eager: true });
 
 const artworks: Artwork[] = Object.values(artworkModules).map((mod: any, index) => {
   const data = mod.default || mod;
