@@ -21,22 +21,8 @@ interface Artwork {
   tags: string[];
 }
 
-// --- 3. 数据源 (动态读取 src/content/artworks 下的所有 JSON) ---
-const artworkModules = import.meta.glob('./content/artworks/*.json', { eager: true });
-
-const artworks: Artwork[] = Object.values(artworkModules).map((mod: any, index) => {
-  const data = mod.default || mod;
-  return {
-    id: index + 1,
-    title: data.title,
-    enTitle: data.enTitle,
-    imageUrl: data.imageUrl,
-    author: data.author,
-    date: data.date,
-    description: data.description,
-    tags: data.tags || []
-  };
-});
+// --- 3. 数据源 (从 API 获取) ---
+// 动态数据在 App 组件内通过 useEffect 获取
 
 // --- 4. 核心组件定义 ---
 
@@ -361,9 +347,10 @@ const BackButton: React.FC<{ isNight: boolean; onClick: () => void }> = ({ isNig
 // --- 6. 视图组件 ---
 
 const GalleryList: React.FC<{ 
+    artworks: Artwork[];
     isNight: boolean; 
     onSelect: (index: number) => void;
-}> = ({ isNight, onSelect }) => {
+}> = ({ artworks, isNight, onSelect }) => {
     return (
         <motion.div 
             className={cn(
@@ -463,12 +450,13 @@ const GalleryList: React.FC<{
 };
 
 const DetailView: React.FC<{
+    artworks: Artwork[];
     currentIndex: number;
     onChangeIndex: (index: number) => void;
     isNightMode: boolean;
     toggleNightMode: () => void;
     onBack: () => void;
-}> = ({ currentIndex, onChangeIndex, isNightMode, toggleNightMode, onBack }) => {
+}> = ({ artworks, currentIndex, onChangeIndex, isNightMode, toggleNightMode, onBack }) => {
     const [showFireflies, setShowFireflies] = useState(false);
     const leftRopeY = useMotionValue(0);
     const rightRopeY = useMotionValue(0);
@@ -597,16 +585,44 @@ const DetailView: React.FC<{
 
 // --- 主程序 (App) ---
 export default function App() {
-  const [view, setView] = useState<'list' | 'detail'>('list'); // 默认进入列表
+  const [view, setView] = useState<'list' | 'detail'>('list');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isNightMode, setIsNightMode] = useState(true);
+  
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 使用 AnimatePresence 实现视图间的平滑切换
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await fetch('/api/artworks');
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setArtworks(data);
+        }
+      } catch (err) {
+        console.error("加载失败:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-black text-white">
+        <div className="animate-pulse tracking-[0.5em] text-sm uppercase opacity-50">Loading Gallery...</div>
+      </div>
+    );
+  }
+
   return (
       <AnimatePresence mode="wait">
         {view === 'list' ? (
             <GalleryList 
                 key="list"
+                artworks={artworks}
                 isNight={isNightMode} 
                 onSelect={(index) => {
                     setCurrentIndex(index);
@@ -616,6 +632,7 @@ export default function App() {
         ) : (
             <DetailView 
                 key="detail"
+                artworks={artworks}
                 currentIndex={currentIndex}
                 onChangeIndex={setCurrentIndex}
                 isNightMode={isNightMode}
