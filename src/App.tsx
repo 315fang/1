@@ -330,17 +330,19 @@ const SpotlightEffect = ({ isDark }: { isDark: boolean }) => {
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, [mouseX, mouseY]);
 
+    const backgroundBg = useMotionTemplate`
+        radial-gradient(
+            600px circle at ${mouseX}px ${mouseY}px,
+            ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'},
+            transparent 80%
+        )
+    `;
+
     return (
         <motion.div
             className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-500"
             style={{
-                background: useMotionTemplate`
-                    radial-gradient(
-                        600px circle at ${mouseX}px ${mouseY}px,
-                        ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'},
-                        transparent 80%
-                    )
-                `
+                background: backgroundBg
             }}
         />
     );
