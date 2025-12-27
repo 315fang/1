@@ -217,6 +217,8 @@ interface ArtworkCardProps {
 const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambientLight, layoutIdPrefix = "detail" }) => {
   const [showInfo, setShowInfo] = useState(false);
   const cardBrightness = useTransform(ambientLight, [0, 150], [1, 0.7]);
+  
+  const filterStyle = useTransform(cardBrightness, (b: number) => `brightness(${b})`);
 
   const handleMouseLeave = () => {
     setShowInfo(false);
@@ -232,7 +234,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
         "relative w-[320px] h-[540px] md:w-[380px] md:h-[620px] rounded-xl cursor-pointer select-none perspective-1000",
         isActive ? "z-30" : "z-10 pointer-events-none"
       )}
-      style={{ perspective: 1200, transformStyle: "preserve-3d", filter: useTransform(cardBrightness, (b: number) => `brightness(${b})`) }}
+      style={{ perspective: 1200, transformStyle: "preserve-3d", filter: filterStyle }}
       initial={false}
       animate={{ 
         scale: isActive ? 1 : 0.85,
