@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, useSpring, useTransform, useMotionValue, AnimatePresence, useMotionTemplate, PanInfo } from 'framer-motion';
 import { Sun, Moon, Sparkles, Info, ChevronLeft, ChevronRight, ArrowLeft, Grid, Maximize2, User, Mail, Instagram } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
@@ -597,7 +597,7 @@ const DetailView: React.FC<{
                                 isActive={true} 
                                 isNight={isNightMode}
                                 ambientLight={leftRopeY}
-                                layoutIdPrefix="detail" // 详情页 ID
+                                layoutIdPrefix="card"
                             />
                         </motion.div>
                     </AnimatePresence>
