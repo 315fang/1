@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, useTransform, useMotionValue, AnimatePresence, useMotionTemplate, PanInfo } from 'framer-motion';
+import { motion, useTransform, useMotionValue, AnimatePresence, PanInfo } from 'framer-motion';
 import { Sun, Moon, Sparkles, ChevronLeft, ChevronRight, ArrowLeft, Maximize2, User, Mail, Instagram, Heart } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -41,42 +41,73 @@ const HeartRipple = ({ x, y, id, onComplete }: { x: number; y: number; id: numbe
     );
 };
 
-// 物理拉绳 (PullCord)
+// 4.1 物理拉绳 (PullCord) - 升级版：聚集交互 & 日月轮转
 interface PullCordProps {
     side: 'left' | 'right';
     label: string;
     icon: React.ReactNode;
-    y: any;
+    y: any; // 使用 any 以兼容 MotionValue 类型
     onTrigger: () => void;
     isDark?: boolean;
 }
 
 const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, isDark = true }) => {
     const [triggered, setTriggered] = useState(false);
+    
+    // 基础光效透明度
     const glowOpacity = useTransform(y, [0, 100], [0, 1]);
 
-    // 简化粒子逻辑
-    const particles = useMemo(() => Array.from({ length: 8 }).map((_, i) => ({
-        id: i,
-        x: Math.cos(i * 45 * (Math.PI / 180)) * 15,
-        y: Math.sin(i * 45 * (Math.PI / 180)) * 15,
-    })), []);
+    // --- ✨ 左侧创意：日月轮转 (Rotation) ---
+    // 下拉时，图标旋转 180度，模拟星球转动
+    const iconRotation = useTransform(y, [0, 150], [0, 180]);
+    // 光晕颜色：如果是白天切黑夜(isDark=false)，显示日落金红；如果是黑夜切白天，显示晨曦白
+    const haloColor = useTransform(
+        y, 
+        [0, 150], 
+        !isDark 
+            ? ["rgba(251, 191, 36, 0)", "rgba(245, 158, 11, 0.8)"] // 日落：金 -> 红
+            : ["rgba(255, 255, 255, 0)", "rgba(147, 197, 253, 0.8)"] // 破晓：透 -> 蓝白
+    );
+
+    // --- ✨ 右侧创意：萤火虫聚集 (Gathering) ---
+    // 生成随机的初始散开位置
+    const particles = useMemo(() => {
+        return Array.from({ length: 12 }).map((_, i) => ({
+            id: i,
+            // 初始位置在圆圈外围 (半径 20-35px)
+            initialX: Math.cos(i * 30 * (Math.PI / 180)) * (20 + Math.random() * 15),
+            initialY: Math.sin(i * 30 * (Math.PI / 180)) * (20 + Math.random() * 15),
+            size: Math.random() * 2 + 1,
+        }));
+    }, []);
 
     const handleDragEnd = (_: any, info: PanInfo) => {
         if (info.offset.y > 80) {
             setTriggered(true);
             onTrigger();
-            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
             setTimeout(() => setTriggered(false), 300);
         }
     };
 
     const height = useTransform(y, (latest: number) => 100 + Math.max(0, latest));
-    const ropeColor = useTransform(y, [0, 150], isDark ? ["rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)"] : ["rgba(0,0,0,0.2)", "rgba(0,0,0,0.6)"]);
+    const ropeColor = useTransform(
+        y,
+        [0, 150],
+        isDark ? ["rgba(255,255,255,0.3)", "rgba(255,255,255,0.8)"] : ["rgba(0,0,0,0.2)", "rgba(0,0,0,0.6)"]
+    );
 
     return (
-        <div className={cn("absolute top-0 z-50 flex flex-col items-center pointer-events-auto", side === 'left' ? 'left-8 md:left-16' : 'right-8 md:right-16')}>
-            <motion.div style={{ height, backgroundColor: ropeColor }} className="absolute top-0 w-[1px] origin-top z-0" />
+        <div className={cn("absolute top-0 z-50 flex flex-col items-center pointer-events-auto",
+            side === 'left' ? 'left-8 md:left-16' : 'right-8 md:right-16'
+        )}>
+            <motion.div
+                style={{ height, backgroundColor: ropeColor }}
+                className="absolute top-0 w-[1px] origin-top z-0"
+            />
+
             <motion.div
                 drag="y"
                 dragConstraints={{ top: 0, bottom: 150 }}
@@ -88,19 +119,91 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
                 whileTap={{ scale: 0.95 }}
                 className="cursor-grab active:cursor-grabbing relative z-10 mt-[100px] group"
             >
-                {particles.map((p) => (
+                {/* --- 粒子层 --- */}
+                {/* 仅在右侧(流萤模式) 或 触发瞬间 显示粒子 */}
+                {(side === 'right' || triggered) && particles.map((p) => {
+                    // 核心逻辑：使用 useTransform 动态计算位置
+                    // 当 y=0 时，位置是 initialX (散开)
+                    // 当 y=120 时，位置是 0 (聚集到中心)
+                    const x = useTransform(y, [0, 120], [p.initialX, 0]);
+                    const currentY = useTransform(y, [0, 120], [p.initialY, 0]);
+                    const opacity = useTransform(y, [0, 20, 120], [0, 1, 0.5]); // 拉动时显现，聚集时稍暗
+
+                    return (
+                        <motion.div
+                            key={p.id}
+                            className={cn(
+                                "absolute rounded-full pointer-events-none transition-colors duration-300",
+                                // 右侧显示萤火虫色，左侧显示普通星尘色
+                                side === 'right' 
+                                    ? (isDark ? "bg-amber-200 shadow-[0_0_2px_gold]" : "bg-emerald-400")
+                                    : "bg-white"
+                            )}
+                            style={{
+                                width: p.size,
+                                height: p.size,
+                                x: x, // 绑定动态X
+                                y: currentY, // 绑定动态Y
+                                opacity: opacity,
+                                top: '50%',
+                                left: '50%',
+                                marginTop: -p.size / 2,
+                                marginLeft: -p.size / 2,
+                                position: 'absolute',
+                            }}
+                        />
+                    );
+                })}
+
+                {/* --- 按钮主体 --- */}
+                <motion.div
+                    className={cn(
+                        "w-10 h-14 rounded-full border border-white/20 backdrop-blur-md flex flex-col items-center justify-center shadow-lg transition-all duration-500 relative overflow-hidden",
+                        triggered
+                            ? "bg-amber-100/40 border-amber-200/50 scale-110 shadow-[0_0_30px_rgba(251,191,36,0.6)]"
+                            : (isDark ? "bg-black/40 hover:bg-white/10" : "bg-white/60 hover:bg-white/80 border-black/5")
+                    )}
+                    // 左侧(昼夜)添加日落/破晓光晕背景
+                    style={{
+                        boxShadow: side === 'left' ? useTransform(haloColor, (c) => `0 0 20px ${c}`) : undefined
+                    }}
+                >
+                    {/* 内部高光流光 */}
                     <motion.div
-                        key={p.id}
-                        className={cn("absolute w-1 h-1 rounded-full pointer-events-none", isDark ? "bg-amber-100" : "bg-cyan-400")}
-                        animate={{ opacity: [0, triggered ? 1 : 0, 0], scale: [0, 1.5, 0], x: [0, p.x], y: [0, p.y] }}
-                        transition={{ duration: 0.6 }}
-                        style={{ top: '50%', left: '50%' }}
+                        style={{ opacity: glowOpacity }}
+                        className={cn(
+                            "absolute inset-0 z-0 bg-gradient-to-t opacity-0 transition-opacity",
+                            side === 'right' 
+                                ? (isDark ? "from-amber-200/20" : "from-emerald-400/20") // 右侧流萤色
+                                : (!isDark ? "from-red-500/20" : "from-blue-400/20") // 左侧日落/破晓色
+                        )}
                     />
-                ))}
-                <motion.div className={cn("w-10 h-14 rounded-full border backdrop-blur-md flex items-center justify-center shadow-lg transition-all duration-300", triggered ? "bg-amber-100/40 scale-110" : (isDark ? "bg-black/40 border-white/20 text-white" : "bg-white/60 border-black/5 text-slate-700"))}>
-                    {React.cloneElement(icon as React.ReactElement, { size: 18 })}
+
+                    <div className={cn("absolute -top-1 w-[1px] h-2 opacity-50 z-10", isDark ? "bg-white" : "bg-slate-500")} />
+                    
+                    {/* 图标容器：左侧会旋转 */}
+                    <motion.div 
+                        className={cn("transition-colors duration-500 z-10", isDark ? "text-white/80" : "text-slate-700")}
+                        style={{ rotate: side === 'left' ? iconRotation : 0 }}
+                    >
+                        {React.cloneElement(icon as React.ReactElement, { size: 18, strokeWidth: 1.5 })}
+                    </motion.div>
                 </motion.div>
-                <motion.div style={{ opacity: glowOpacity, y: useTransform(y, [0, 50], [-10, 10]) }} className={cn("absolute top-full mt-3 px-3 py-1 text-[10px] font-medium rounded-full whitespace-nowrap backdrop-blur-md border uppercase", side === 'left' ? '-left-4' : '-right-4', isDark ? "bg-black/40 text-amber-100 border-amber-500/30" : "bg-white/80 text-cyan-700 border-cyan-200")}>
+
+                {/* --- 标签 (Label) --- */}
+                <motion.div
+                    style={{
+                        opacity: glowOpacity,
+                        y: useTransform(y, [0, 50], [-10, 10])
+                    }}
+                    className={cn(
+                        "absolute top-full mt-3 px-3 py-1 text-[10px] font-medium rounded-full whitespace-nowrap backdrop-blur-md pointer-events-none border tracking-widest uppercase transition-all duration-300",
+                        side === 'left' ? '-left-4' : '-right-4',
+                        isDark
+                            ? "bg-black/40 text-amber-100 border-amber-500/30 shadow-[0_0_15px_rgba(251,191,36,0.2)]"
+                            : "bg-white/80 text-cyan-700 border-cyan-200 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+                    )}
+                >
                     {label}
                 </motion.div>
             </motion.div>
