@@ -1,13 +1,6 @@
 {
-    "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/api/$1"
-        }
-    ],
     "functions": {
         "api/artworks.js": {
-            "runtime": "nodejs18.x",
             "maxDuration": 30
         }
     }
