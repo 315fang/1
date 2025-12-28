@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import Lightbox from './components/Lightbox';
 
 // --- 工具函数 ---
 function cn(...inputs: ClassValue[]) {
@@ -44,17 +45,17 @@ interface Artwork {
 }
 
 // --- 卡片组件 ---
-const ArtworkCard: React.FC<{ data: Artwork }> = ({ data }) => (
+const ArtworkCard: React.FC<{ data: Artwork; onImageClick?: () => void }> = ({ data, onImageClick }) => (
   <div className="relative w-full aspect-[3/4] bg-gray-800 rounded-xl overflow-hidden shadow-2xl border border-white/10 group cursor-pointer">
     {data.imageUrl ? (
-      <img 
-        src={data.imageUrl} 
-        alt={data.title} 
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100" 
+      <img
+        src={data.imageUrl}
+        alt={data.title}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
         onError={(e) => {
-            // 图片加载失败时替换为占位图
-            e.currentTarget.src = "https://via.placeholder.com/400x600?text=No+Image"; 
+          e.currentTarget.src = "https://via.placeholder.com/400x600?text=No+Image";
         }}
+        onClick={onImageClick}
       />
     ) : (
       <div className="w-full h-full flex items-center justify-center text-white/20 bg-gray-900">无图片</div>
@@ -73,15 +74,20 @@ const ArtworkCard: React.FC<{ data: Artwork }> = ({ data }) => (
 
 // --- 主程序 ---
 function AppContent() {
+  // ✅ 【关键】所有的 Hooks 必须都在这里，最顶部！绝不能放在任何 if 或 return 之后
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
+  const [debugMsg, setDebugMsg] = useState("");
   const [isOffline, setIsOffline] = useState(false);
+
+  // ✅ 控制 Lightbox 的状态必须放在这里，绝不能放在 if (loading) 后面
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
         console.log("开始请求 API...");
-        // 增加 5 秒超时控制，避免 Vercel 函数冷启动时间过长导致页面假死
+        // 增加 8 秒超时控制，避免 Vercel 函数冷启动时间过长导致页面假死
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
@@ -89,7 +95,7 @@ function AppContent() {
         clearTimeout(timeoutId);
 
         if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        
+
         const text = await res.text();
         // 尝试解析，防止返回 HTML (Vercel 404 页) 导致白屏
         try {
@@ -116,7 +122,9 @@ function AppContent() {
     loadData();
   }, []);
 
-  // 加载状态优化：显示骨架屏或 Loading 文字
+  // ⛔️ 【分界线】所有的 return 和 if 判断必须在所有 Hook 定义之后
+
+  // 加载状态
   if (loading) return (
     <div className="flex h-screen w-full items-center justify-center bg-[#050508] text-white">
         <div className="animate-pulse flex flex-col items-center gap-4">
@@ -126,9 +134,19 @@ function AppContent() {
     </div>
   );
 
+  // 调试信息（兜底模式下不再显示，因为已经切换到演示数据）
+  if (debugMsg && !isOffline) return (
+    <div className="flex h-screen items-center justify-center bg-zinc-900 text-white p-10">
+      <div className="max-w-xl text-center border border-yellow-500/50 p-8 rounded-xl bg-yellow-900/20">
+        <h2 className="text-xl font-bold text-yellow-500 mb-4">调试模式</h2>
+        <p className="font-mono text-sm opacity-80">{debugMsg}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#050508] text-white p-4 md:p-8 flex flex-col items-center">
-      
+
       {/* 顶部状态栏 - 如果是离线模式提醒用户 */}
       {isOffline && (
         <div className="w-full max-w-6xl mb-6 bg-red-500/10 border border-red-500/30 p-3 rounded-lg flex items-center justify-between text-xs md:text-sm text-red-200">
@@ -137,9 +155,20 @@ function AppContent() {
         </div>
       )}
 
+      {/* Lightbox 组件 */}
+      {selectedImage && (
+        <Lightbox
+          image={selectedImage}
+          title="作品详情"
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full max-w-6xl">
         {artworks.map(art => (
-          <ArtworkCard key={art.id} data={art} />
+          <div key={art.id}>
+            <ArtworkCard data={art} onImageClick={() => setSelectedImage(art.imageUrl)} />
+          </div>
         ))}
       </div>
     </div>
@@ -147,10 +176,9 @@ function AppContent() {
 }
 
 export default function App() {
-  // 即使最外层崩溃，也显示黑底白字，而不是浏览器默认白屏
   return (
     <div className="bg-[#050508] min-h-screen">
-       <AppContent />
+      <AppContent />
     </div>
   );
 }
