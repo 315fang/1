@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, useTransform, useMotionValue, AnimatePresence, useMotionTemplate, PanInfo } from 'framer-motion';
-import { Sun, Moon, Sparkles, Info, ChevronLeft, ChevronRight, ArrowLeft, Maximize2, User, Mail, Instagram } from 'lucide-react';
+import { motion, useSpring, useTransform, useMotionValue, AnimatePresence, useMotionTemplate, PanInfo } from 'framer-motion';
+import { Sun, Moon, Sparkles, Info, ChevronLeft, ChevronRight, ArrowLeft, Grid, Maximize2, User, Mail, Instagram } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Lightbox from './components/Lightbox';
 
-// --- 1. Utility Functions ---
+// --- 1. 工具函数 (直接内联，避免路径错误) ---
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// --- 2. Type Definitions ---
+// --- 2. 类型定义 ---
 interface Artwork {
     id: number;
     title: string;
@@ -22,14 +22,18 @@ interface Artwork {
     tags: string[];
 }
 
-// --- 3. Components ---
+// --- 3. 数据源 (从 API 获取) ---
+// 动态数据在 App 组件内通过 useEffect 获取
 
-// 3.1 PullCord - Physical Interaction
+// --- 4. 核心组件定义 ---
+
+// 4.1 物理拉绳 (PullCord)
+// 4.1 物理拉绳 (PullCord) - 升级版：聚光交互
 interface PullCordProps {
     side: 'left' | 'right';
     label: string;
     icon: React.ReactNode;
-    y: any;
+    y: any; // 使用 any 以兼容 MotionValue 类型
     onTrigger: () => void;
     isDark?: boolean;
 }
@@ -39,6 +43,7 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
     const glowOpacity = useTransform(y, [0, 100], [0, 1]);
     const particleScale = useTransform(y, [0, 150], [0.5, 1.5]);
 
+    // 生成固定的粒子位置，避免每次渲染重算
     const particles = useMemo(() => {
         return Array.from({ length: 12 }).map((_, i) => ({
             id: i,
@@ -87,6 +92,7 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
                 whileTap={{ scale: 0.95 }}
                 className="cursor-grab active:cursor-grabbing relative z-10 mt-[100px] group"
             >
+                {/* 聚光粒子层 - 随下拉显现 */}
                 {particles.map((p) => (
                     <motion.div
                         key={p.id}
@@ -106,6 +112,7 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
                             delay: p.delay,
                             ease: "easeInOut"
                         }}
+                        // 粒子定位在手柄中心
                         style={{
                             width: p.size,
                             height: p.size,
@@ -128,6 +135,7 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
                             : (isDark ? "bg-black/40 hover:bg-white/10" : "bg-white/60 hover:bg-white/80 border-black/5")
                     )}
                 >
+                    {/* 内部高光流光 */}
                     <motion.div
                         style={{ opacity: glowOpacity }}
                         className={cn(
@@ -162,7 +170,7 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
     );
 };
 
-// 3.2 Fireflies
+// 4.2 流萤粒子 (Fireflies)
 const Fireflies: React.FC<{ isActive: boolean; isDark: boolean; agitationLevel: any }> = ({ isActive, isDark, agitationLevel }) => {
     const particles = useMemo(() => {
         return Array.from({ length: 25 }).map((_, i) => ({
@@ -213,7 +221,7 @@ const Fireflies: React.FC<{ isActive: boolean; isDark: boolean; agitationLevel: 
     );
 };
 
-// 3.3 ArtworkCard - 3D Holo Glass Style
+// 4.3 艺术卡片 (ArtworkCard) - 升级版：3D 全息磨砂玻璃风格
 interface ArtworkCardProps {
     data: Artwork;
     isActive: boolean;
@@ -227,22 +235,27 @@ interface ArtworkCardProps {
 const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambientLight, layoutIdPrefix = "detail", onMaximize, onTagClick }) => {
     const [showInfo, setShowInfo] = useState(false);
 
+    // --- 新增：3D 倾斜逻辑 ---
     const x = useMotionValue(0);
     const y = useMotionValue(0);
+    // 根据鼠标位置计算旋转角度 (范围可以自己调，这里是 15度)
     const rotateX = useTransform(y, [-200, 200], [15, -15]);
     const rotateY = useTransform(x, [-200, 200], [-15, 15]);
 
+    // 计算光泽移动的效果 (让反光跟随鼠标)
     const shineX = useTransform(x, [-200, 200], [0, 100]);
     const shineY = useTransform(y, [-200, 200], [0, 100]);
 
     function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
         const rect = event.currentTarget.getBoundingClientRect();
+        // 计算鼠标相对于卡片中心的坐标
         x.set(event.clientX - rect.left - rect.width / 2);
         y.set(event.clientY - rect.top - rect.height / 2);
     }
 
     function handleMouseLeave() {
         setShowInfo(false);
+        // 鼠标离开时复位
         x.set(0);
         y.set(0);
     }
@@ -257,7 +270,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
     return (
         <motion.div
             className={cn(
-                "relative w-[320px] h-[540px] md:w-[380px] md:h-[620px] rounded-[24px] cursor-pointer select-none perspective-1200",
+                "relative w-[320px] h-[540px] md:w-[380px] md:h-[620px] rounded-[24px] cursor-pointer select-none perspective-1200", // 加大圆角
                 isActive ? "z-30" : "z-10 pointer-events-none"
             )}
             style={{
@@ -269,6 +282,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
             animate={{
                 scale: isActive ? 1 : 0.85,
                 opacity: isActive ? 1 : 0.5,
+                // 如果不是激活状态，取消 3D 旋转，稍微模糊
                 rotateX: isActive ? 0 : 0,
                 rotateY: isActive ? 0 : 0,
                 filter: isActive ? 'blur(0px)' : 'blur(4px)',
@@ -283,6 +297,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
             onMouseLeave={handleMouseLeave}
             onClick={() => setShowInfo(prev => !prev)}
         >
+            {/* 3D 容器：承载旋转效果 */}
             <motion.div
                 layoutId={`${layoutIdPrefix}-container-${data.id}`}
                 style={{
@@ -292,23 +307,24 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
                 }}
                 className={cn(
                     "w-full h-full relative rounded-[24px] overflow-hidden transition-shadow duration-300",
+                    // 这里实现了图片里那种蓝紫色的环境光晕
                     isNight
                         ? "shadow-[0_20px_50px_-12px_rgba(59,130,246,0.5)] border border-white/10"
                         : "shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-white/40"
                 )}
             >
-                {/* Background Image */}
+                {/* 背景层：图片 */}
                 <motion.div className="absolute inset-0 w-full h-full bg-slate-900">
                     <motion.img
                         layoutId={`${layoutIdPrefix}-image-${data.id}`}
                         src={data.imageUrl}
                         alt={data.title}
                         className="w-full h-full object-cover"
-                        style={{ scale: 1.1 }}
+                        style={{ scale: 1.1 }} // 图片稍微放大一点，防止旋转时露底
                     />
                 </motion.div>
 
-                {/* Glass Sand Particles */}
+                {/* ✨ 玻璃流沙粒子层 (新加) */}
                 <motion.div
                     className={cn(
                         "absolute inset-0 z-10 pointer-events-none overflow-hidden sand-gradient",
@@ -317,36 +333,37 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
                     style={{ mixBlendMode: 'soft-light', opacity: isNight ? 0.6 : 0.4 }}
                 />
 
-                {/* Core Effects */}
+                {/* 核心特效层：模仿参考图的“磨砂玻璃 + 蓝色光泽” */}
                 <div className={cn(
                     "absolute inset-0 z-20 pointer-events-none transition-opacity duration-500",
+                    // 白天稍微亮一点，晚上深邃一点
                     isNight
                         ? "bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/20 mix-blend-overlay"
                         : "bg-gradient-to-br from-white/40 via-transparent to-white/10"
                 )} />
 
-                {/* Reflective Highlights */}
+                {/* 高光反射层：随鼠标移动的“反光” */}
                 <motion.div
                     className="absolute inset-0 z-20 opacity-30 pointer-events-none mix-blend-plus-lighter"
                     style={{
                         background: useMotionTemplate`linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.8) 45%, rgba(255, 255, 255, 0.4) 50%, transparent 54%)`,
-                        x: shineX,
+                        x: shineX, // 反光跟随鼠标
                         y: shineY,
                     }}
                 />
 
-                {/* Inner Glow Border */}
+                {/* 边框高光：模仿玻璃厚度 (Inner Glow) */}
                 <div className="absolute inset-0 rounded-[24px] z-20 pointer-events-none ring-1 ring-white/20 shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]" />
 
-                {/* Info Layer */}
+                {/* 信息层 */}
                 <motion.div
                     className="absolute inset-0 z-30 p-8 flex flex-col justify-between bg-black/20 backdrop-blur-[2px]"
                     animate={{
-                        opacity: showInfo ? 1 : 0,
+                        opacity: showInfo ? 1 : 0, // 只有点击后才显示文字，保持平时画面的纯净感
                         backdropFilter: showInfo ? "blur(10px)" : "blur(0px)"
                     }}
                 >
-                    <div className="pt-2 translate-z-10" style={{ transform: "translateZ(30px)" }}>
+                    <div className="pt-2 translate-z-10" style={{ transform: "translateZ(30px)" }}> {/* 文字悬浮效果 */}
                         <div className="flex justify-between items-start mb-4">
                             <p className="text-[10px] tracking-[0.2em] uppercase font-medium text-white/90">{data.date}</p>
                             <div className="flex gap-4">
@@ -354,7 +371,7 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
                                     <button
                                         onClick={(e) => { e.stopPropagation(); onMaximize(); }}
                                         className="opacity-60 hover:opacity-100 hover:scale-110 transition-all text-white"
-                                        title="Fullscreen"
+                                        title="全屏查看"
                                     >
                                         <Maximize2 size={16} />
                                     </button>
@@ -394,7 +411,8 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
     );
 };
 
-// 3.4 Helper UI Components
+// --- 5. 辅助 UI 组件 ---
+
 const SpotlightEffect = ({ isDark }: { isDark: boolean }) => {
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
@@ -419,7 +437,9 @@ const SpotlightEffect = ({ isDark }: { isDark: boolean }) => {
     return (
         <motion.div
             className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-500"
-            style={{ background: backgroundBg }}
+            style={{
+                background: backgroundBg
+            }}
         />
     );
 };
@@ -471,7 +491,7 @@ const BackButton: React.FC<{ isNight: boolean; onClick: () => void }> = ({ isNig
     );
 };
 
-// --- 4. Views ---
+// --- 6. 视图组件 ---
 
 const GalleryList: React.FC<{
     artworks: Artwork[];
@@ -501,7 +521,7 @@ const GalleryList: React.FC<{
                         className="flex items-center gap-3 opacity-60"
                     >
                         <User size={16} />
-                        <span className="text-xs tracking-[0.3em] uppercase font-medium">Portfolio 2025</span>
+                        <span className="text-xs tracking-[0.3em] uppercase font-medium">Portfolio • 2025</span>
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
@@ -534,7 +554,7 @@ const GalleryList: React.FC<{
                         transition={{ delay: 0.4 }}
                         className="flex gap-6 mt-2 opacity-60 text-sm"
                     >
-                        <span className="flex items-center gap-2 hover:text-amber-500 transition-colors cursor-pointer"><Mail size={16} /> Contact</span>
+                        <span className="flex items-center gap-2 hover:text-amber-500 transition-colors cursor-pointer"><Mail size={16} /> 联系我</span>
                         <span className="flex items-center gap-2 hover:text-amber-500 transition-colors cursor-pointer"><Instagram size={16} /> Instagram</span>
                     </motion.div>
                 </header>
@@ -652,7 +672,7 @@ const DetailView: React.FC<{
 
             <PullCord
                 side="left"
-                label={isNightMode ? "Morning" : "Night"}
+                label={isNightMode ? "迎接白昼" : "步入黑夜"}
                 icon={isNightMode ? <Sun size={20} /> : <Moon size={20} />}
                 y={leftRopeY}
                 onTrigger={toggleNightMode}
@@ -660,7 +680,7 @@ const DetailView: React.FC<{
             />
             <PullCord
                 side="right"
-                label={showFireflies ? "Hide" : "Fireflies"}
+                label={showFireflies ? "隐去流萤" : "唤醒流萤"}
                 icon={<Sparkles size={20} className={cn("transition-colors", showFireflies ? (isNightMode ? "text-amber-300" : "text-emerald-500") : "")} />}
                 y={rightRopeY}
                 onTrigger={() => setShowFireflies(prev => !prev)}
@@ -708,7 +728,8 @@ const DetailView: React.FC<{
             <AnimatePresence>
                 {lightboxItem && (
                     <Lightbox
-                        data={lightboxItem}
+                        image={lightboxItem.imageUrl}
+                        title={lightboxItem.title}
                         onClose={() => setLightboxItem(null)}
                         layoutId={`card-image-${lightboxItem.id}`}
                     />
@@ -737,13 +758,13 @@ const DetailView: React.FC<{
                 transition={{ delay: 2, duration: 1 }}
                 className={cn("absolute bottom-6 right-8 text-[10px] text-right pointer-events-none select-none", isNightMode ? "text-white/30" : "text-slate-400")}
             >
-                <p>Pull cords to interact · Move mouse to feel the light</p>
+                <p>轻拉绳索唤醒流萤 • 移动鼠标感受光影</p>
             </motion.div>
         </motion.div>
     );
 };
 
-// --- 5. Main App ---
+// --- 主程序 (App) ---
 export default function App() {
     const [view, setView] = useState<'list' | 'detail'>('list');
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -757,28 +778,26 @@ export default function App() {
         async function loadData() {
             try {
                 const res = await fetch('/api/artworks');
-                if (!res.ok) {
-                    console.error(`API Error: ${res.status}`);
-                    return;
-                }
-                const text = await res.text();
-                try {
-                    const data = JSON.parse(text);
-                    if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
-                    if (Array.isArray(data) && data.length > 0) {
-                        setArtworks(data);
-                    }
-                } catch (e: any) {
-                    console.error("API Parse Error: " + e.message);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    setArtworks(data);
                 }
             } catch (err) {
-                console.error("Load Failed:", err);
+                console.error("加载失败:", err);
             } finally {
                 setLoading(false);
             }
         }
         loadData();
     }, []);
+
+    if (loading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-black text-white">
+                <div className="animate-pulse tracking-[0.5em] text-sm uppercase opacity-50">Loading Gallery...</div>
+            </div>
+        );
+    }
 
     const filteredArtworks = useMemo(() => {
         if (!filterTag) return artworks;
@@ -790,14 +809,6 @@ export default function App() {
         setView('list');
     };
 
-    if (loading) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-black text-white">
-                <div className="animate-pulse tracking-[0.5em] text-sm uppercase opacity-50">Loading Gallery...</div>
-            </div>
-        );
-    }
-
     return (
         <AnimatePresence mode="wait">
             {view === 'list' ? (
@@ -808,6 +819,7 @@ export default function App() {
                     activeTag={filterTag}
                     onClearTag={() => setFilterTag(null)}
                     onSelect={(index) => {
+                        // 如果有过滤，需要找到在原数组中的索引
                         const selectedArt = filteredArtworks[index];
                         const originalIndex = artworks.findIndex(a => a.id === selectedArt.id);
                         setCurrentIndex(originalIndex);
@@ -817,7 +829,7 @@ export default function App() {
             ) : (
                 <DetailView
                     key="detail"
-                    artworks={artworks}
+                    artworks={artworks} // 详情页总是可以浏览所有图片，还是只浏览过滤后的？通常是所有，或者保留过滤上下文。这里保持简单，浏览所有。
                     currentIndex={currentIndex}
                     onChangeIndex={setCurrentIndex}
                     isNightMode={isNightMode}
