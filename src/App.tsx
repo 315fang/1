@@ -42,6 +42,39 @@ const HeartRipple = ({ x, y, id, onComplete }: { x: number; y: number; id: numbe
 };
 
 // 4.1 物理拉绳 (PullCord) - 升级版：聚集交互 & 日月轮转
+
+// --- 修复版：提取出的粒子子组件 ---
+// 把 useTransform 放在这里是安全的，因为组件的挂载/卸载符合 React 规范
+const ParticleItem = ({ y, p, side, isDark }: { y: any, p: any, side: string, isDark: boolean }) => {
+    // 核心逻辑：使用 useTransform 动态计算位置
+    const x = useTransform(y, [0, 120], [p.initialX, 0]);
+    const currentY = useTransform(y, [0, 120], [p.initialY, 0]);
+    const opacity = useTransform(y, [0, 20, 120], [0, 1, 0.5]); 
+
+    return (
+        <motion.div
+            className={cn(
+                "absolute rounded-full pointer-events-none transition-colors duration-300",
+                side === 'right' 
+                    ? (isDark ? "bg-amber-200 shadow-[0_0_2px_gold]" : "bg-emerald-400")
+                    : "bg-white"
+            )}
+            style={{
+                width: p.size,
+                height: p.size,
+                x: x, 
+                y: currentY,
+                opacity: opacity,
+                top: '50%',
+                left: '50%',
+                marginTop: -p.size / 2,
+                marginLeft: -p.size / 2,
+                position: 'absolute',
+            }}
+        />
+    );
+};
+
 interface PullCordProps {
     side: 'left' | 'right';
     label: string;
@@ -119,41 +152,16 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
                 whileTap={{ scale: 0.95 }}
                 className="cursor-grab active:cursor-grabbing relative z-10 mt-[100px] group"
             >
-                {/* --- 粒子层 --- */}
-                {/* 仅在右侧(流萤模式) 或 触发瞬间 显示粒子 */}
-                {(side === 'right' || triggered) && particles.map((p) => {
-                    // 核心逻辑：使用 useTransform 动态计算位置
-                    // 当 y=0 时，位置是 initialX (散开)
-                    // 当 y=120 时，位置是 0 (聚集到中心)
-                    const x = useTransform(y, [0, 120], [p.initialX, 0]);
-                    const currentY = useTransform(y, [0, 120], [p.initialY, 0]);
-                    const opacity = useTransform(y, [0, 20, 120], [0, 1, 0.5]); // 拉动时显现，聚集时稍暗
-
-                    return (
-                        <motion.div
-                            key={p.id}
-                            className={cn(
-                                "absolute rounded-full pointer-events-none transition-colors duration-300",
-                                // 右侧显示萤火虫色，左侧显示普通星尘色
-                                side === 'right' 
-                                    ? (isDark ? "bg-amber-200 shadow-[0_0_2px_gold]" : "bg-emerald-400")
-                                    : "bg-white"
-                            )}
-                            style={{
-                                width: p.size,
-                                height: p.size,
-                                x: x, // 绑定动态X
-                                y: currentY, // 绑定动态Y
-                                opacity: opacity,
-                                top: '50%',
-                                left: '50%',
-                                marginTop: -p.size / 2,
-                                marginLeft: -p.size / 2,
-                                position: 'absolute',
-                            }}
-                        />
-                    );
-                })}
+                {/* --- 修复点：使用子组件渲染粒子 --- */}
+                {(side === 'right' || triggered) && particles.map((p) => (
+                    <ParticleItem 
+                        key={p.id} 
+                        y={y} 
+                        p={p} 
+                        side={side} 
+                        isDark={isDark} 
+                    />
+                ))}
 
                 {/* --- 按钮主体 --- */}
                 <motion.div
