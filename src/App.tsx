@@ -8,7 +8,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 // --- 错误边界 (防白屏护盾) ---
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
   constructor(props: any) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error: any) { return { hasError: true, error }; }
   render() {
@@ -58,23 +58,34 @@ function AppContent() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [debugMsg, setDebugMsg] = useState("");
+  const [dataInfo, setDataInfo] = useState("");
 
   useEffect(() => {
     async function loadData() {
       try {
         const res = await fetch('/api/artworks');
+        setDataInfo(`API 响应状态: ${res.status}`);
+
+        if (!res.ok) {
+          setDebugMsg(`⚠️ API 请求失败 (状态码: ${res.status})`);
+          return;
+        }
+
         const text = await res.text();
         try {
-            const data = JSON.parse(text);
-            if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
-            if (Array.isArray(data)) {
-                if (data.length === 0) setDebugMsg("⚠️ 成功连上 Notion，但表格是空的 (请检查 Notion 数据)");
-                setArtworks(data);
-            } else {
-                setDebugMsg("⚠️ 数据格式错误");
+          const data = JSON.parse(text);
+          if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
+          if (Array.isArray(data)) {
+            setDataInfo(`成功加载 ${data.length} 个作品`);
+            if (data.length === 0) {
+              setDebugMsg("⚠️ 成功连上 Notion，但表格是空的 (请检查 Notion 数据)");
             }
+            setArtworks(data);
+          } else {
+            setDebugMsg("⚠️ 数据格式错误: 期望数组，得到 " + typeof data);
+          }
         } catch (e: any) {
-            setDebugMsg("⚠️ API 解析失败: " + e.message);
+          setDebugMsg("⚠️ API 解析失败: " + e.message + "\n原始响应: " + text.substring(0, 200));
         }
       } catch (err: any) {
         setDebugMsg("⚠️ 网络请求失败: " + err.message);
@@ -91,14 +102,33 @@ function AppContent() {
     <div className="flex h-screen items-center justify-center bg-zinc-900 text-white p-10">
       <div className="max-w-xl text-center border border-yellow-500/50 p-8 rounded-xl bg-yellow-900/20">
         <h2 className="text-xl font-bold text-yellow-500 mb-4">调试模式</h2>
-        <p className="font-mono text-sm opacity-80">{debugMsg}</p>
+        <p className="font-mono text-sm opacity-80 whitespace-pre-wrap">{debugMsg}</p>
+        {dataInfo && <p className="font-mono text-xs opacity-50 mt-4">{dataInfo}</p>}
       </div>
     </div>
   );
 
+  // 没有作品时的空状态处理
+  if (artworks.length === 0) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-zinc-900 text-white p-10">
+        <div className="max-w-xl text-center border border-blue-500/50 p-8 rounded-xl bg-blue-900/20">
+          <h2 className="text-xl font-bold text-blue-400 mb-4">📭 画廊为空</h2>
+          <p className="text-sm opacity-80">请在 Notion 数据库中添加作品</p>
+          {dataInfo && <p className="font-mono text-xs opacity-50 mt-4">{dataInfo}</p>}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#050508] text-white p-8 flex items-center justify-center">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+    <div className="min-h-screen bg-[#050508] text-white p-8 flex flex-col items-center justify-center">
+      {/* 调试信息条 */}
+      <div className="fixed top-0 left-0 right-0 bg-green-900/80 text-green-200 text-xs py-1 px-4 text-center z-50">
+        ✅ {dataInfo}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl mt-8">
         {artworks.map(art => (
           <div key={art.id} className="aspect-[3/4]">
             <ArtworkCard data={art} />
