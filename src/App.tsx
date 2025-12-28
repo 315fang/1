@@ -3,6 +3,7 @@ import { motion, useSpring, useTransform, useMotionValue, AnimatePresence, useMo
 import { Sun, Moon, Sparkles, Info, ChevronLeft, ChevronRight, ArrowLeft, Grid, Maximize2, User, Mail, Instagram } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import Lightbox from './components/Lightbox';
 
 // --- 1. 工具函数 (直接内联，避免路径错误) ---
 function cn(...inputs: ClassValue[]) {
@@ -27,6 +28,7 @@ interface Artwork {
 // --- 4. 核心组件定义 ---
 
 // 4.1 物理拉绳 (PullCord)
+// 4.1 物理拉绳 (PullCord) - 升级版：聚光交互
 interface PullCordProps {
     side: 'left' | 'right';
     label: string;
@@ -38,6 +40,19 @@ interface PullCordProps {
 
 const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, isDark = true }) => {
     const [triggered, setTriggered] = useState(false);
+    const glowOpacity = useTransform(y, [0, 100], [0, 1]);
+    const particleScale = useTransform(y, [0, 150], [0.5, 1.5]);
+
+    // 生成固定的粒子位置，避免每次渲染重算
+    const particles = useMemo(() => {
+        return Array.from({ length: 12 }).map((_, i) => ({
+            id: i,
+            x: Math.cos(i * 30 * (Math.PI / 180)) * (15 + Math.random() * 10),
+            y: Math.sin(i * 30 * (Math.PI / 180)) * (15 + Math.random() * 10),
+            size: Math.random() * 2 + 1,
+            delay: Math.random() * 2
+        }));
+    }, []);
 
     const handleDragEnd = (_: any, info: PanInfo) => {
         if (info.offset.y > 80) {
@@ -75,29 +90,81 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
                 style={{ y }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="cursor-grab active:cursor-grabbing relative z-10 mt-[100px]"
+                className="cursor-grab active:cursor-grabbing relative z-10 mt-[100px] group"
             >
+                {/* 聚光粒子层 - 随下拉显现 */}
+                {particles.map((p) => (
+                    <motion.div
+                        key={p.id}
+                        className={cn(
+                            "absolute rounded-full pointer-events-none transition-colors duration-300",
+                            isDark ? "bg-amber-100 shadow-[0_0_4px_gold]" : "bg-cyan-400 shadow-[0_0_4px_cyan]"
+                        )}
+                        initial={{ x: 0, y: 0 }}
+                        animate={{
+                            x: [0, p.x, 0],
+                            y: [0, p.y, 0],
+                            opacity: [0, 0.8, 0],
+                        }}
+                        transition={{
+                            repeat: Infinity,
+                            duration: 2,
+                            delay: p.delay,
+                            ease: "easeInOut"
+                        }}
+                        // 粒子定位在手柄中心
+                        style={{
+                            width: p.size,
+                            height: p.size,
+                            top: '50%',
+                            left: '50%',
+                            marginTop: -p.size / 2,
+                            marginLeft: -p.size / 2,
+                            position: 'absolute',
+                            opacity: glowOpacity,
+                            scale: particleScale
+                        }}
+                    />
+                ))}
+
                 <motion.div
                     className={cn(
-                        "w-10 h-14 rounded-full border border-white/20 backdrop-blur-md flex flex-col items-center justify-center shadow-lg transition-all duration-500",
+                        "w-10 h-14 rounded-full border border-white/20 backdrop-blur-md flex flex-col items-center justify-center shadow-lg transition-all duration-500 relative overflow-hidden",
                         triggered
                             ? "bg-amber-100/40 border-amber-200/50 scale-110 shadow-[0_0_30px_rgba(251,191,36,0.6)]"
                             : (isDark ? "bg-black/40 hover:bg-white/10" : "bg-white/60 hover:bg-white/80 border-black/5")
                     )}
                 >
-                    <div className={cn("absolute -top-1 w-[1px] h-2 opacity-50", isDark ? "bg-white" : "bg-slate-500")} />
-                    <div className={cn("transition-colors duration-500", isDark ? "text-white/80" : "text-slate-700")}>
+                    {/* 内部高光流光 */}
+                    <motion.div
+                        style={{ opacity: glowOpacity }}
+                        className={cn(
+                            "absolute inset-0 z-0 bg-gradient-to-t opacity-0 transition-opacity",
+                            isDark ? "from-amber-200/20" : "from-cyan-400/20"
+                        )}
+                    />
+
+                    <div className={cn("absolute -top-1 w-[1px] h-2 opacity-50 z-10", isDark ? "bg-white" : "bg-slate-500")} />
+                    <div className={cn("transition-colors duration-500 z-10", isDark ? "text-white/80" : "text-slate-700")}>
                         {React.cloneElement(icon as React.ReactElement, { size: 18, strokeWidth: 1.5 })}
                     </div>
                 </motion.div>
 
-                <div className={cn(
-                    "absolute top-full mt-3 px-2 py-0.5 text-[9px] font-medium rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap backdrop-blur-md pointer-events-none border tracking-widest uppercase",
-                    side === 'left' ? '-left-2' : '-right-2',
-                    isDark ? "bg-white/10 text-white/70 border-white/10" : "bg-white/80 text-slate-600 border-slate-200"
-                )}>
+                <motion.div
+                    style={{
+                        opacity: glowOpacity,
+                        y: useTransform(y, [0, 50], [-10, 10])
+                    }}
+                    className={cn(
+                        "absolute top-full mt-3 px-3 py-1 text-[10px] font-medium rounded-full whitespace-nowrap backdrop-blur-md pointer-events-none border tracking-widest uppercase transition-all duration-300",
+                        side === 'left' ? '-left-4' : '-right-4',
+                        isDark
+                            ? "bg-black/40 text-amber-100 border-amber-500/30 shadow-[0_0_15px_rgba(251,191,36,0.2)]"
+                            : "bg-white/80 text-cyan-700 border-cyan-200 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+                    )}
+                >
                     {label}
-                </div>
+                </motion.div>
             </motion.div>
         </div>
     );
@@ -161,9 +228,11 @@ interface ArtworkCardProps {
     isNight: boolean;
     ambientLight: any;
     layoutIdPrefix?: string;
+    onMaximize?: () => void;
+    onTagClick?: (tag: string) => void;
 }
 
-const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambientLight, layoutIdPrefix = "detail" }) => {
+const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambientLight, layoutIdPrefix = "detail", onMaximize, onTagClick }) => {
     const [showInfo, setShowInfo] = useState(false);
 
     // --- 新增：3D 倾斜逻辑 ---
@@ -255,6 +324,15 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
                     />
                 </motion.div>
 
+                {/* ✨ 玻璃流沙粒子层 (新加) */}
+                <motion.div
+                    className={cn(
+                        "absolute inset-0 z-10 pointer-events-none overflow-hidden sand-gradient",
+                        showInfo ? "sand-flow-fast" : "sand-flow"
+                    )}
+                    style={{ mixBlendMode: 'soft-light', opacity: isNight ? 0.6 : 0.4 }}
+                />
+
                 {/* 核心特效层：模仿参考图的“磨砂玻璃 + 蓝色光泽” */}
                 <div className={cn(
                     "absolute inset-0 z-20 pointer-events-none transition-opacity duration-500",
@@ -288,7 +366,18 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
                     <div className="pt-2 translate-z-10" style={{ transform: "translateZ(30px)" }}> {/* 文字悬浮效果 */}
                         <div className="flex justify-between items-start mb-4">
                             <p className="text-[10px] tracking-[0.2em] uppercase font-medium text-white/90">{data.date}</p>
-                            <Info size={16} className="text-white/80" />
+                            <div className="flex gap-4">
+                                {onMaximize && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onMaximize(); }}
+                                        className="opacity-60 hover:opacity-100 hover:scale-110 transition-all text-white"
+                                        title="全屏查看"
+                                    >
+                                        <Maximize2 size={16} />
+                                    </button>
+                                )}
+                                <Info size={16} className="text-white/80" />
+                            </div>
                         </div>
                         <h2 className="text-3xl font-light mb-1 tracking-wide text-white drop-shadow-lg">{data.title}</h2>
                         <h3 className="text-sm font-serif italic text-white/80">{data.enTitle}</h3>
@@ -299,7 +388,16 @@ const ArtworkCard: React.FC<ArtworkCardProps> = ({ data, isActive, isNight, ambi
                         <p className="leading-relaxed font-light text-sm mb-6 text-white/90 drop-shadow-md">{data.description}</p>
                         <div className="flex flex-wrap gap-2 mb-6">
                             {data.tags.map(tag => (
-                                <span key={tag} className="px-3 py-1 rounded-full text-[10px] uppercase tracking-wider border border-white/20 text-white/90 bg-white/10 backdrop-blur-md shadow-sm">{tag}</span>
+                                <span
+                                    key={tag}
+                                    onClick={(e) => { e.stopPropagation(); onTagClick && onTagClick(tag); }}
+                                    className={cn(
+                                        "px-3 py-1 rounded-full text-[10px] uppercase tracking-wider border border-white/20 text-white/90 bg-white/10 backdrop-blur-md shadow-sm transition-colors",
+                                        onTagClick ? "cursor-pointer hover:bg-white/20 hover:border-white/40" : ""
+                                    )}
+                                >
+                                    {tag}
+                                </span>
                             ))}
                         </div>
                         <div className="flex items-center gap-3 pt-5 border-t border-white/10">
@@ -399,7 +497,9 @@ const GalleryList: React.FC<{
     artworks: Artwork[];
     isNight: boolean;
     onSelect: (index: number) => void;
-}> = ({ artworks, isNight, onSelect }) => {
+    activeTag?: string | null;
+    onClearTag?: () => void;
+}> = ({ artworks, isNight, onSelect, activeTag, onClearTag }) => {
     return (
         <motion.div
             className={cn(
@@ -431,6 +531,23 @@ const GalleryList: React.FC<{
                     >
                         五月糖 <span className="font-serif italic font-normal opacity-50 block md:inline md:ml-4 text-3xl md:text-5xl">Design & Art</span>
                     </motion.h1>
+
+                    {activeTag && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="flex items-center gap-4"
+                        >
+                            <span className="text-sm opacity-60">Filtering by:</span>
+                            <button
+                                onClick={onClearTag}
+                                className="px-4 py-2 rounded-full border border-current/20 hover:bg-current/5 flex items-center gap-2 text-sm transition-colors"
+                            >
+                                #{activeTag} <span className="opacity-50 text-xs">✕</span>
+                            </button>
+                        </motion.div>
+                    )}
+
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -505,8 +622,10 @@ const DetailView: React.FC<{
     isNightMode: boolean;
     toggleNightMode: () => void;
     onBack: () => void;
-}> = ({ artworks, currentIndex, onChangeIndex, isNightMode, toggleNightMode, onBack }) => {
+    onTagSelect?: (tag: string) => void;
+}> = ({ artworks, currentIndex, onChangeIndex, isNightMode, toggleNightMode, onBack, onTagSelect }) => {
     const [showFireflies, setShowFireflies] = useState(false);
+    const [lightboxItem, setLightboxItem] = useState<Artwork | null>(null);
     const leftRopeY = useMotionValue(0);
     const rightRopeY = useMotionValue(0);
     const timeOverlayOpacity = useTransform(leftRopeY, [0, 150], [0, 0.8]);
@@ -598,11 +717,24 @@ const DetailView: React.FC<{
                                 isNight={isNightMode}
                                 ambientLight={leftRopeY}
                                 layoutIdPrefix="card"
+                                onMaximize={() => setLightboxItem(artworks[currentIndex])}
+                                onTagClick={onTagSelect}
                             />
                         </motion.div>
                     </AnimatePresence>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {lightboxItem && (
+                    <Lightbox
+                        image={lightboxItem.imageUrl}
+                        title={lightboxItem.title}
+                        onClose={() => setLightboxItem(null)}
+                        layoutId={`card-image-${lightboxItem.id}`}
+                    />
+                )}
+            </AnimatePresence>
 
             <div className="absolute bottom-12 left-0 w-full flex justify-center z-20 pointer-events-none">
                 <div className="flex gap-4">
@@ -637,6 +769,7 @@ export default function App() {
     const [view, setView] = useState<'list' | 'detail'>('list');
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isNightMode, setIsNightMode] = useState(true);
+    const [filterTag, setFilterTag] = useState<string | null>(null);
 
     const [artworks, setArtworks] = useState<Artwork[]>([]);
     const [loading, setLoading] = useState(true);
@@ -666,27 +799,43 @@ export default function App() {
         );
     }
 
+    const filteredArtworks = useMemo(() => {
+        if (!filterTag) return artworks;
+        return artworks.filter(art => art.tags.includes(filterTag));
+    }, [artworks, filterTag]);
+
+    const handleTagSelect = (tag: string) => {
+        setFilterTag(tag);
+        setView('list');
+    };
+
     return (
         <AnimatePresence mode="wait">
             {view === 'list' ? (
                 <GalleryList
                     key="list"
-                    artworks={artworks}
+                    artworks={filteredArtworks}
                     isNight={isNightMode}
+                    activeTag={filterTag}
+                    onClearTag={() => setFilterTag(null)}
                     onSelect={(index) => {
-                        setCurrentIndex(index);
+                        // 如果有过滤，需要找到在原数组中的索引
+                        const selectedArt = filteredArtworks[index];
+                        const originalIndex = artworks.findIndex(a => a.id === selectedArt.id);
+                        setCurrentIndex(originalIndex);
                         setView('detail');
                     }}
                 />
             ) : (
                 <DetailView
                     key="detail"
-                    artworks={artworks}
+                    artworks={artworks} // 详情页总是可以浏览所有图片，还是只浏览过滤后的？通常是所有，或者保留过滤上下文。这里保持简单，浏览所有。
                     currentIndex={currentIndex}
                     onChangeIndex={setCurrentIndex}
                     isNightMode={isNightMode}
                     toggleNightMode={() => setIsNightMode(prev => !prev)}
                     onBack={() => setView('list')}
+                    onTagSelect={handleTagSelect}
                 />
             )}
         </AnimatePresence>
