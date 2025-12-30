@@ -1,0 +1,25 @@
+{
+    "name": "couple-gallery-backend",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "db:init": "tsx src/db/init.ts"
+    },
+    "dependencies": {
+        "hono": "^4.0.0",
+        "@hono/node-server": "^1.8.0",
+        "better-sqlite3": "^11.0.0",
+        "bcryptjs": "^2.4.3",
+        "dotenv": "^16.4.0"
+    },
+    "devDependencies": {
+        "@types/better-sqlite3": "^7.6.8",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/node": "^20.11.0",
+        "tsx": "^4.7.0",
+        "typescript": "^5.3.0"
+    }
+}
