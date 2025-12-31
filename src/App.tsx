@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence, useMotionValue, useMotionTemplate, useTransform } from 'framer-motion';
 import { Sun, Moon, Sparkles, Flower, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
