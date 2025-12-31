@@ -1,9 +1,10 @@
 import { Photo, Profile, TimelineEvent } from '../types';
 
-// 优先使用环境变量 VITE_API_URL
-// 如果未设置，且在本地开发，使用 localhost:3001
-// 否则默认为 /api (配合 Vercel Rewrite 或 Nginx 反代)
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
+// API 地址配置
+// - 本地开发: 使用 localhost:3001
+// - 生产环境: 使用 https://api.maodian316.top
+const API_BASE_URL = import.meta.env.VITE_API_URL
+    || (import.meta.env.DEV ? 'http://localhost:3001/api' : 'https://api.maodian316.top/api');
 
 export const api = {
     // 获取照片列表

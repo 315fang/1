@@ -19,7 +19,17 @@ const app = new Hono();
 
 // CORS 配置 - 允许前端跨域访问
 app.use('*', cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', '*'], // 开发时允许所有来源
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://maodian316.top',
+        'https://www.maodian316.top',
+        'https://api.maodian316.top',
+        // Vercel 部署域名 (替换成你的实际 Vercel 域名)
+        'https://1-315fangs-projects.vercel.app',
+        'https://1-git-main-315fangs-projects.vercel.app',
+        '*' // 开发阶段允许所有，生产可移除
+    ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -122,4 +132,5 @@ console.log(`
 serve({
     fetch: app.fetch,
     port,
+    hostname: '0.0.0.0', // 监听所有网络接口，允许外部访问
 });
