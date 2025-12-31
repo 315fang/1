@@ -69,23 +69,22 @@ const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpe
             <AnimatePresence>
                 {!isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 1, scale: 1 }}
                         animate={{
                             opacity: 1,
-                            scale: [1, 1.1, 1], // 呼吸灯效果
+                            scale: [1, 1.05, 1], // 轻微呼吸效果
                         }}
                         transition={{
-                            opacity: { duration: 0.5 },
                             scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
                         }}
                         exit={{ opacity: 0, scale: 1.5 }}
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto cursor-pointer flex flex-col items-center gap-2 group"
                         onClick={onOpen}
                     >
-                        <div className={cn("w-16 h-16 rounded-full border-2 flex items-center justify-center backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-transform group-hover:scale-110", isNight ? "border-amber-500/50 bg-black/40 text-amber-500" : "border-gold-500/50 bg-white/20 text-white")}>
-                            <span className="text-xs font-serif tracking-widest uppercase">Open</span>
+                        <div className={cn("w-20 h-20 rounded-full border-2 flex items-center justify-center backdrop-blur-md shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-110", isNight ? "border-amber-500/50 bg-black/60 text-amber-500" : "border-white/70 bg-white/30 text-white")}>
+                            <span className="text-sm font-serif tracking-widest uppercase">Open</span>
                         </div>
-                        <span className="text-[10px] text-white/50 tracking-[0.2em] uppercase group-hover:tracking-[0.4em] transition-all">Click to Reveal</span>
+                        <span className="text-xs text-white/70 tracking-[0.2em] uppercase group-hover:tracking-[0.4em] transition-all">Click to Reveal</span>
                     </motion.div>
                 )}
             </AnimatePresence>
