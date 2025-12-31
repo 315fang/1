@@ -19,19 +19,14 @@ const app = new Hono();
 
 // CORS 配置 - 允许前端跨域访问
 app.use('*', cors({
-    origin: [
-        'http://localhost:5173',
-        'http://localhost:3000',
-        'https://maodian316.top',
-        'https://www.maodian316.top',
-        'https://api.maodian316.top',
-        // Vercel 部署域名 (替换成你的实际 Vercel 域名)
-        'https://1-315fangs-projects.vercel.app',
-        'https://1-git-main-315fangs-projects.vercel.app',
-        '*' // 开发阶段允许所有，生产可移除
-    ],
+    origin: (origin) => {
+        // 允许所有来源（开发阶段）
+        // 生产环境可以改成白名单验证
+        return origin || '*';
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
 }));
 
 // 健康检查
