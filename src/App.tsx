@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, useTransform, useMotionValue, AnimatePresence, useMotionTemplate, PanInfo } from 'framer-motion';
-import { Sun, Moon, Sparkles, ChevronLeft, ChevronRight, ArrowLeft, Maximize2, User, Mail, Instagram, Heart, Flower } from 'lucide-react';
+import { Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Maximize2, Heart, Flower } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Lightbox from './components/Lightbox';
@@ -136,8 +136,8 @@ const SpotlightOverlay = ({ isNight }: { isNight: boolean }) => {
         window.addEventListener("mousemove", handleMouseMove);
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, []);
-    // 调亮探照灯效果：增加半径到 350px，并将边缘透明度降低到 0.8，让页面不再是一片死黑
-    const background = useMotionTemplate`radial-gradient(circle 350px at ${mouseX}px ${mouseY}px, rgba(0,0,0,0) 0%, rgba(5,5,8,0.3) 40%, rgba(5,5,8,0.8) 80%)`;
+    // 进一步调亮探照灯：半径增加到 500px，边缘透明度降低到 0.6
+    const background = useMotionTemplate`radial-gradient(circle 500px at ${mouseX}px ${mouseY}px, rgba(0,0,0,0) 0%, rgba(5,5,8,0.2) 50%, rgba(5,5,8,0.6) 90%)`;
     return <motion.div className="fixed inset-0 z-30 pointer-events-none transition-opacity duration-1000" style={{ background: background, opacity: isNight ? 1 : 0 }} />;
 };
 
@@ -183,7 +183,7 @@ const PullCord: React.FC<PullCordProps> = ({ side, label, icon, y, onTrigger, is
 
 const ArtworkCard: React.FC<{ data: Photo; isActive: boolean; isNight: boolean; onMaximize?: () => void; onTagClick?: (tag: string) => void }> = ({ data, isActive, isNight, onMaximize, onTagClick }) => {
     const [showInfo, setShowInfo] = useState(false);
-    const x = useMotionValue(0); y = useMotionValue(0);
+    const x = useMotionValue(0); const y = useMotionValue(0);
     const rotateX = useTransform(y, [-200, 200], [10, -10]);
     const rotateY = useTransform(x, [-200, 200], [-10, 10]);
 
