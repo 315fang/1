@@ -335,10 +335,6 @@ const AppContent: React.FC = () => {
                     />
                 )}
             </AnimatePresence>
-            {/* Debug Info */}
-            <div className="fixed bottom-0 left-0 w-full bg-black/90 text-green-400 p-2 text-[10px] font-mono z-[9999] opacity-80 pointer-events-none break-all">
-                API: {import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : 'https://api.maodian316.top/api')} | Profile: {profile ? 'OK' : 'NULL'} | VercelEnv: {JSON.stringify(import.meta.env)}
-            </div>
         </div>
     );
 };
