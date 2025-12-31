@@ -55,10 +55,12 @@ app.get('/api/artworks', (c) => {
 // 管理后台静态页面
 app.get('/admin', (c) => {
     try {
-        const adminHtml = readFileSync(join(__dirname, 'admin/index.html'), 'utf-8');
+        // 使用 process.cwd() 获取项目根目录，确保无论在 src 还是 dist 下运行都能找到文件
+        const adminHtml = readFileSync(join(process.cwd(), 'src/admin/index.html'), 'utf-8');
         return c.html(adminHtml);
     } catch (error) {
-        return c.text('管理后台页面未找到', 404);
+        console.error('Admin Error:', error);
+        return c.text('管理后台页面未找到，请检查 src/admin/index.html 是否存在', 404);
     }
 });
 
