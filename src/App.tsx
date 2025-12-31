@@ -70,7 +70,14 @@ const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpe
                 {!isOpen && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        animate={{
+                            opacity: 1,
+                            scale: [1, 1.1, 1], // 呼吸灯效果
+                        }}
+                        transition={{
+                            opacity: { duration: 0.5 },
+                            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                        }}
                         exit={{ opacity: 0, scale: 1.5 }}
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto cursor-pointer flex flex-col items-center gap-2 group"
                         onClick={onOpen}
@@ -120,7 +127,7 @@ const Fireflies = ({ isActive }: { isActive: boolean }) => {
     return <div className="absolute inset-0 overflow-hidden pointer-events-none z-0"><AnimatePresence>{particles.map(p => <FireflyItem key={p.id} p={p} />)}</AnimatePresence></div>;
 };
 
-// 🔦 探照灯层 (优化版：增加环境可见度)
+// 🔦 探照灯层
 const SpotlightOverlay = ({ isNight }: { isNight: boolean }) => {
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
@@ -129,11 +136,10 @@ const SpotlightOverlay = ({ isNight }: { isNight: boolean }) => {
         window.addEventListener("mousemove", handleMouseMove);
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, []);
-    // 将边缘透明度降到 0.85，让周围不是纯黑，能隐约看到内容
-    const background = useMotionTemplate`radial-gradient(circle 350px at ${mouseX}px ${mouseY}px, rgba(0,0,0,0) 0%, rgba(5,5,8,0.4) 40%, rgba(5,5,8,0.85) 80%)`;
+    // 调亮探照灯效果：增加半径到 350px，并将边缘透明度降低到 0.8，让页面不再是一片死黑
+    const background = useMotionTemplate`radial-gradient(circle 350px at ${mouseX}px ${mouseY}px, rgba(0,0,0,0) 0%, rgba(5,5,8,0.3) 40%, rgba(5,5,8,0.8) 80%)`;
     return <motion.div className="fixed inset-0 z-30 pointer-events-none transition-opacity duration-1000" style={{ background: background, opacity: isNight ? 1 : 0 }} />;
 };
-
 
 // 拉绳组件
 const RopeParticle = ({ y, p, side, isDark }: { y: any, p: any, side: string, isDark: boolean }) => {
@@ -284,18 +290,6 @@ const AppContent: React.FC = () => {
             <AnimatePresence>{hearts.map(h => <HeartRipple key={h.id} id={h.id} x={h.x} y={h.y} onComplete={removeHeart} />)}</AnimatePresence>
 
             {isNight ? <Fireflies isActive={showEffects} /> : <SakuraRain isActive={showEffects} />}
-
-            {/* 氛围灯：当流萤模式开启时，提供微弱的全局暖色光 */}
-            <AnimatePresence>
-                {isNight && showEffects && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-10 pointer-events-none bg-amber-900/10 mix-blend-screen"
-                    />
-                )}
-            </AnimatePresence>
 
             {/* 拉绳控制 */}
             <PullCord side="left" label={isNight ? "开灯" : "关灯"} icon={isNight ? <Sun /> : <Moon />} y={leftY} onTrigger={() => setIsNight(!isNight)} isDark={isNight} />
