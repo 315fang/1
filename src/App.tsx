@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { Sun, Moon, Sparkles, Flower, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Lightbox from './components/Lightbox';
