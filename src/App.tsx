@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, useTransform, useMotionValue, AnimatePresence, useMotionTemplate, PanInfo } from 'framer-motion';
-import { Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Maximize2, Heart, Flower } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Lightbox from './components/Lightbox';
@@ -14,36 +14,60 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// --- 2. 资源定义 (鼠标图标 SVG) ---
-const BIRD_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5"/><path d="M10 18v3"/><path d="M14 17.75V21"/><path d="M8.2 6.5a4.2 4.2 0 0 1 7.6 0"/></svg>') 16 16, auto`;
-const TORCH_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 10 20"/><path d="m11 12-2 3"/><path d="m13 12 2 3"/><path d="M8.2 6.5a4.2 4.2 0 0 1 7.6 0"/><circle cx="12" cy="12" r="9" stroke-opacity="0.3"/></svg>') 16 16, auto`;
-
-// --- 3. 组件定义 ---
-
-// 🔊 音效管理器 (SoundManager)
-const SoundManager = ({ isNight, curtainOpen }: { isNight: boolean, curtainOpen: boolean }) => {
-    useEffect(() => {
-        // console.log(isNight ? "🔊 播放: 虫鸣与篝火" : "🔊 播放: 鸟鸣与微风");
-    }, [isNight]);
-
-    useEffect(() => {
-        // if (curtainOpen) console.log("🔊 播放: 帷幕拉开声");
-    }, [curtainOpen]);
-
-    return null;
-};
+// --- 2. 组件定义 ---
 
 // 🎭 戏剧帷幕 (TheatricalCurtain)
+// 替换原有的 TheatricalCurtain 组件
 const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen: () => void; isNight: boolean }) => {
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    // 探照灯效果：鼠标移动更新坐标
+    React.useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            mouseX.set(e.clientX);
+            mouseY.set(e.clientY);
+        };
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
+    }, []);
+
+    // 动态背景：基于鼠标位置的径向渐变
+    const maskImage = useMotionTemplate`radial-gradient(circle 150px at ${mouseX}px ${mouseY}px, transparent 0%, black 100%)`;
+
     return (
         <motion.div
-            className="absolute inset-0 z-40 pointer-events-none flex"
+            className="absolute inset-0 z-[999] flex overflow-hidden cursor-pointer"
+            onClick={onOpen} // 点击任意位置打开
             initial={false}
+            style={{ pointerEvents: isOpen ? 'none' : 'auto' }} // 打开后穿透点击
         >
+            {/* 左侧帷幕 */}
             <motion.div
-                className={cn("h-full bg-cover relative shadow-2xl origin-left", isNight ? "bg-zinc-900" : "bg-red-900")}
+                className={cn("h-full relative shadow-2xl origin-left", isNight ? "bg-zinc-900" : "bg-red-900")}
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                    backgroundImage: isNight
+                        ? 'linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%)'
+                        : 'linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%)'
+                }}
+            >
+                {/* 纹理噪点 */}
+                <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(0,0,0,0.3)_25px,transparent_30px)]" />
+                
+                {/* 💡 高级感核心：探照灯遮罩层 (鼠标移动时稍微变亮/透视) */}
+                <motion.div 
+                    className="absolute inset-0 bg-black/40 pointer-events-none transition-opacity duration-300"
+                    style={{ maskImage: maskImage, WebkitMaskImage: maskImage }}
+                />
+            </motion.div>
+
+            {/* 右侧帷幕 */}
+            <motion.div
+                className={cn("h-full relative shadow-2xl origin-right", isNight ? "bg-zinc-900" : "bg-red-900")}
+                animate={{ width: isOpen ? "0%" : "50%" }}
+                transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
                 style={{
                     backgroundImage: isNight
                         ? 'linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%)'
@@ -51,40 +75,22 @@ const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpe
                 }}
             >
                 <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(0,0,0,0.3)_25px,transparent_30px)]" />
+                 <motion.div 
+                    className="absolute inset-0 bg-black/40 pointer-events-none"
+                    style={{ maskImage: maskImage, WebkitMaskImage: maskImage }}
+                />
             </motion.div>
 
-            <motion.div
-                className={cn("h-full bg-cover relative shadow-2xl origin-right", isNight ? "bg-zinc-900" : "bg-red-900")}
-                animate={{ width: isOpen ? "0%" : "50%" }}
-                transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                    backgroundImage: isNight
-                        ? 'linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%)'
-                        : 'linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%)'
-                }}
-            >
-                <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(0,0,0,0.3)_25px,transparent_30px)]" />
-            </motion.div>
-
+            {/* 提示文字 (不再是按钮，而是浮在底部的微弱提示) */}
             <AnimatePresence>
                 {!isOpen && (
                     <motion.div
-                        initial={{ opacity: 1, scale: 1 }}
-                        animate={{
-                            opacity: 1,
-                            scale: [1, 1.05, 1], // 轻微呼吸效果
-                        }}
-                        transition={{
-                            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                        }}
-                        exit={{ opacity: 0, scale: 1.5 }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto cursor-pointer flex flex-col items-center gap-2 group"
-                        onClick={onOpen}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.6 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute bottom-20 w-full text-center text-white/50 text-sm tracking-[0.5em] uppercase font-light pointer-events-none mix-blend-plus-lighter"
                     >
-                        <div className={cn("w-20 h-20 rounded-full border-2 flex items-center justify-center backdrop-blur-md shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-110", isNight ? "border-amber-500/50 bg-black/60 text-amber-500" : "border-white/70 bg-white/30 text-white")}>
-                            <span className="text-sm font-serif tracking-widest uppercase">Open</span>
-                        </div>
-                        <span className="text-xs text-white/70 tracking-[0.2em] uppercase group-hover:tracking-[0.4em] transition-all">Click to Reveal</span>
+                        Click anywhere to start
                     </motion.div>
                 )}
             </AnimatePresence>
