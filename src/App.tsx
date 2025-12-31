@@ -70,21 +70,15 @@ const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpe
                 {!isOpen && (
                     <motion.div
                         initial={{ opacity: 1, scale: 1 }}
-                        animate={{
-                            opacity: 1,
-                            scale: [1, 1.05, 1], // 轻微呼吸效果
-                        }}
-                        transition={{
-                            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                        }}
-                        exit={{ opacity: 0, scale: 1.5 }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-auto cursor-pointer flex flex-col items-center gap-2 group"
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] cursor-pointer flex flex-col items-center gap-2 pointer-events-auto"
                         onClick={onOpen}
+                        style={{ border: '5px solid yellow' }} // Debug: 强制黄色边框
                     >
-                        <div className={cn("w-20 h-20 rounded-full border-2 flex items-center justify-center backdrop-blur-md shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-transform group-hover:scale-110", isNight ? "border-amber-500/50 bg-black/60 text-amber-500" : "border-white/70 bg-white/30 text-white")}>
-                            <span className="text-sm font-serif tracking-widest uppercase">Open</span>
+                        <div className={cn("w-20 h-20 rounded-full border-4 flex items-center justify-center backdrop-blur-md shadow-2xl transition-transform hover:scale-110", isNight ? "border-amber-500 bg-black/80 text-amber-500" : "border-white bg-white/50 text-white")}>
+                            <span className="text-xl font-bold tracking-widest uppercase">Open</span>
                         </div>
-                        <span className="text-xs text-white/70 tracking-[0.2em] uppercase group-hover:tracking-[0.4em] transition-all">Click to Reveal</span>
+                        <span className="text-sm font-bold text-white bg-black/50 px-2 rounded">Click to Reveal</span>
                     </motion.div>
                 )}
             </AnimatePresence>
