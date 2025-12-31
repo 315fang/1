@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import Database, { Database as DatabaseType } from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFileSync } from 'fs';
@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 const DB_PATH = join(__dirname, '../../data.db');
 
 // 创建数据库连接
-export const db = new Database(DB_PATH);
+const db: DatabaseType = new Database(DB_PATH);
 
 // 启用外键约束
 db.pragma('foreign_keys = ON');
