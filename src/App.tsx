@@ -19,73 +19,103 @@ const BIRD_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/
 
 const TORCH_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 10 20"/><path d="m11 12-2 3"/><path d="m13 12 2 3"/><path d="M8.2 6.5a4.2 4.2 0 0 1 7.6 0"/><circle cx="12" cy="12" r="9" stroke-opacity="0.3"/></svg>') 16 16, auto`;
 
-// 🔊 音效管理器 (SoundManager)
+// 🔊 升级版音效管理器 (SoundManager)
 const SoundManager = ({ isNight, curtainOpen }: { isNight: boolean, curtainOpen: boolean }) => {
     useEffect(() => {
-        // console.log(isNight ? "🔊 播放: 虫鸣与篝火" : "🔊 播放: 鸟鸣与微风");
-    }, [isNight]);
-
-    useEffect(() => {
-        // if (curtainOpen) console.log("🔊 播放: 帷幕拉开声");
+        if (curtainOpen) {
+            // 播放掌声 (这里是一个短促的掌声音效)
+            const applause = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
+            applause.volume = 0.6;
+            applause.play().catch(e => console.log("音频自动播放被浏览器拦截，需用户交互", e));
+        }
     }, [curtainOpen]);
 
     return null;
 };
 
-// --- 3. 组件定义 ---
-
-// 🎭 戏剧帷幕 (TheatricalCurtain)
-// 替换原有的 TheatricalCurtain 组件
-const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen: () => void; isNight: boolean }) => {
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-
-    // 探照灯效果：鼠标移动更新坐标
-    React.useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            mouseX.set(e.clientX);
-            mouseY.set(e.clientY);
-        };
-        window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
+// 🎉 礼花特效组件
+const ConfettiExplosion = ({ isActive }: { isActive: boolean }) => {
+    // 生成 50 个彩色粒子
+    const particles = React.useMemo(() => {
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+        return Array.from({ length: 50 }).map((_, i) => ({
+            id: i,
+            x: 0,
+            y: 0,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            // 随机爆炸方向和距离
+            targetX: (Math.random() - 0.5) * 800,
+            targetY: (Math.random() - 0.5) * 800,
+            scale: Math.random() * 0.5 + 0.5,
+            rotation: Math.random() * 360
+        }));
     }, []);
 
-    // 动态背景：基于鼠标位置的径向渐变
-    const maskImage = useMotionTemplate`radial-gradient(circle 150px at ${mouseX}px ${mouseY}px, transparent 0%, black 100%)`;
+    if (!isActive) return null;
 
+    return (
+        <div className="fixed inset-0 pointer-events-none z-[1000] flex items-center justify-center">
+            {particles.map((p) => (
+                <motion.div
+                    key={p.id}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+                    animate={{
+                        x: p.targetX,
+                        y: p.targetY,
+                        scale: p.scale,
+                        rotate: p.rotation,
+                        opacity: 0
+                    }}
+                    transition={{
+                        duration: 1.5,
+                        ease: "easeOut"
+                    }}
+                    style={{
+                        backgroundColor: p.color,
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        position: 'absolute'
+                    }}
+                />
+            ))}
+        </div>
+    );
+};
+
+// --- 3. 组件定义 ---
+
+// 🎭 盛大开幕帷幕 (改造版)
+const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen: () => void; isNight: boolean }) => {
     return (
         <motion.div
             className="absolute inset-0 z-[999] flex overflow-hidden cursor-pointer"
-            onClick={onOpen} // 点击任意位置打开
+            onClick={onOpen} // 点击屏幕任何地方都会触发
             initial={false}
-            style={{ pointerEvents: isOpen ? 'none' : 'auto' }} // 打开后穿透点击
+            style={{ pointerEvents: isOpen ? 'none' : 'auto' }}
         >
-            {/* 左侧帷幕 */}
+            {/* 左半边帷幕 */}
             <motion.div
                 className={cn("h-full relative shadow-2xl origin-left", isNight ? "bg-zinc-900" : "bg-red-900")}
+                // 核心动画：宽度从 50% 变为 0%，实现向左收起
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }} // 慢一点，更有仪式感
                 style={{
                     backgroundImage: isNight
                         ? 'linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%)'
                         : 'linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%)'
                 }}
             >
-                {/* 纹理噪点 */}
+                {/* 增加布料质感 */}
                 <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(0,0,0,0.3)_25px,transparent_30px)]" />
-                
-                {/* 💡 高级感核心：探照灯遮罩层 (鼠标移动时稍微变亮/透视) */}
-                <motion.div 
-                    className="absolute inset-0 bg-black/40 pointer-events-none transition-opacity duration-300"
-                    style={{ maskImage: maskImage, WebkitMaskImage: maskImage }}
-                />
             </motion.div>
 
-            {/* 右侧帷幕 */}
+            {/* 右半边帷幕 */}
             <motion.div
                 className={cn("h-full relative shadow-2xl origin-right", isNight ? "bg-zinc-900" : "bg-red-900")}
+                // 核心动画：宽度从 50% 变为 0%，实现向右收起
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
                 style={{
                     backgroundImage: isNight
                         ? 'linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%)'
@@ -93,22 +123,23 @@ const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpe
                 }}
             >
                 <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(0,0,0,0.3)_25px,transparent_30px)]" />
-                 <motion.div 
-                    className="absolute inset-0 bg-black/40 pointer-events-none"
-                    style={{ maskImage: maskImage, WebkitMaskImage: maskImage }}
-                />
             </motion.div>
 
-            {/* 提示文字 (不再是按钮，而是浮在底部的微弱提示) */}
+            {/* 中间的文字提示 (未打开时显示) */}
             <AnimatePresence>
                 {!isOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.6 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute bottom-20 w-full text-center text-white/50 text-sm tracking-[0.5em] uppercase font-light pointer-events-none mix-blend-plus-lighter"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/80 text-center z-50 pointer-events-none mix-blend-plus-lighter"
                     >
-                        Click anywhere to start
+                        <h1 className="text-4xl md:text-6xl font-serif tracking-widest mb-4 drop-shadow-lg">
+                            OUR STORY
+                        </h1>
+                        <p className="text-xs md:text-sm tracking-[0.5em] uppercase opacity-70 animate-pulse">
+                            Click to Open
+                        </p>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -243,6 +274,7 @@ const AppContent: React.FC = () => {
     const [isNight, setIsNight] = useState(false);
     const [showEffects, setShowEffects] = useState(false);
     const [curtainOpen, setCurtainOpen] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     const [profile, setProfile] = useState<Profile | null>(null);
     const [photos, setPhotos] = useState<Photo[]>([]);
@@ -299,6 +331,14 @@ const AppContent: React.FC = () => {
         bio: "Waiting for you..."
     };
 
+    // 处理开幕函数：拉开帷幕并触发礼花
+    const handleOpenCurtain = () => {
+        setCurtainOpen(true);
+        setShowConfetti(true); // 触发礼花
+        // 礼花放完后自动消失
+        setTimeout(() => setShowConfetti(false), 3000);
+    };
+
     return (
         <div
             className={cn("min-h-screen transition-colors duration-1000 cursor-auto relative overflow-hidden", isNight ? "bg-[#050508]" : "bg-[#f0f4f8]")}
@@ -308,7 +348,9 @@ const AppContent: React.FC = () => {
             <SoundManager isNight={isNight} curtainOpen={curtainOpen} />
             <SpotlightOverlay isNight={isNight} />
 
-            <TheatricalCurtain isOpen={curtainOpen} onOpen={() => setCurtainOpen(true)} isNight={isNight} />
+            {/* 盛大开幕：礼花 + 帷幕 */}
+            <ConfettiExplosion isActive={showConfetti} />
+            <TheatricalCurtain isOpen={curtainOpen} onOpen={handleOpenCurtain} isNight={isNight} />
 
             <AnimatePresence>{hearts.map(h => <HeartRipple key={h.id} id={h.id} x={h.x} y={h.y} onComplete={removeHeart} />)}</AnimatePresence>
 
