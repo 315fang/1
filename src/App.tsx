@@ -14,26 +14,39 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// 噪声纹理样式（模拟布料颗粒感）
-const noiseStyle = {
-    backgroundImage: `url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.4"/></svg>')`,
-    backgroundRepeat: 'repeat',
-    backgroundPosition: 'center',
-};
-
 // --- 2. 资源定义 (鼠标图标 SVG) ---
 const BIRD_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5"/><path d="M10 18v3"/><path d="M14 17.75V21"/><path d="M8.2 6.5a4.2 4.2 0 0 1 7.6 0"/></svg>') 16 16, auto`;
 
 const TORCH_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 10 20"/><path d="m11 12-2 3"/><path d="m13 12 2 3"/><path d="M8.2 6.5a4.2 4.2 0 0 1 7.6 0"/><circle cx="12" cy="12" r="9" stroke-opacity="0.3"/></svg>') 16 16, auto`;
 
-// 🔊 升级版音效管理器 (SoundManager)
+// 🔊 升级版音效管理器 (1.5秒掌声)
 const SoundManager = ({ isNight, curtainOpen }: { isNight: boolean, curtainOpen: boolean }) => {
     useEffect(() => {
         if (curtainOpen) {
-            // 播放掌声 (这里是一个短促的掌声音效)
+            // 这里换了一个更清晰的掌声音效
             const applause = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
-            applause.volume = 0.6;
-            applause.play().catch(e => console.log("音频自动播放被浏览器拦截，需用户交互", e));
+            applause.volume = 0.8;
+            applause.play().catch(e => console.log("音频播放被拦截", e));
+
+            // 1.5秒后开始淡出并停止
+            const stopTime = 1500;
+            const fadeInterval = setInterval(() => {
+                if (applause.volume > 0.1) {
+                    applause.volume -= 0.1; // 快速淡出
+                } else {
+                    applause.pause();
+                    applause.currentTime = 0;
+                    clearInterval(fadeInterval);
+                }
+            }, 50); // 每50ms降低一次音量，制造淡出效果
+
+            // 确保在1.5秒多一点的时候彻底停掉
+            setTimeout(() => {
+                if (!applause.paused) {
+                    applause.pause();
+                    clearInterval(fadeInterval);
+                }
+            }, stopTime);
         }
     }, [curtainOpen]);
 
@@ -110,74 +123,104 @@ const SideBlownConfetti = ({ isActive }: { isActive: boolean }) => {
 
 // --- 3. 组件定义 ---
 
-// 🎭 升级版：极具质感的天鹅绒帷幕
+// 🎭 终极版：皇家天鹅绒帷幕
 const LuxuriousCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen: () => void; isNight: boolean }) => {
-    // 定义白天(深红)和黑夜(深灰)的布料纹理
-    const fabricTexture = isNight
-        // 黑夜模式：深炭灰色的天鹅绒褶皱
+    // 🎨 核心材质：模拟厚重天鹅绒的光影褶皱
+    // 通过不同透明度的黑色和白色叠加，制造出布料起伏的感觉
+    const velvetGradient = isNight
+        // 黑夜：深邃的炭黑/午夜蓝质感
         ? `repeating-linear-gradient(90deg,
-            #18181b 0%, #27272a 5%, #18181b 10%, #09090b 15%, #18181b 20%)`
-        // 白天模式：皇家深红色的天鹅绒褶皱
+            #09090b 0%,
+            #27272a 4%,
+            #09090b 8%,
+            #000000 12%,
+            #18181b 16%,
+            #27272a 20%
+          )`
+        // 白天：皇家深红，带金丝绒光泽
         : `repeating-linear-gradient(90deg,
-            #7f1d1d 0%, #991b1b 5%, #7f1d1d 10%, #450a0a 15%, #7f1d1d 20%)`;
+            #450a0a 0%,
+            #7f1d1d 5%,
+            #991b1b 10%,
+            #450a0a 15%,
+            #7f1d1d 20%,
+            #b91c1c 25%,
+            #450a0a 30%
+          )`;
 
-    const curtainStyle = {
-        backgroundImage: fabricTexture,
-        // 添加底部暗角，增加立体感
-        boxShadow: isNight
-            ? 'inset 0 -100px 150px -50px rgba(0,0,0,0.8), 0 0 50px rgba(0,0,0,0.5)'
-            : 'inset 0 -100px 150px -50px rgba(50,0,0,0.6), 0 0 50px rgba(0,0,0,0.3)'
-    };
+    // 阴影样式：增加布料边缘的立体厚度
+    const curtainShadow = isNight
+        ? 'inset -10px 0 20px rgba(0,0,0,0.8), 10px 0 30px rgba(0,0,0,0.5)'
+        : 'inset -10px 0 20px rgba(50,0,0,0.7), 10px 0 30px rgba(0,0,0,0.4)';
 
     return (
         <motion.div
-            className="absolute inset-0 z-[999] flex overflow-hidden cursor-pointer group"
+            className="absolute inset-0 z-[999] flex overflow-hidden cursor-pointer"
             onClick={onOpen}
             style={{ pointerEvents: isOpen ? 'none' : 'auto' }}
         >
-            {/* 左侧帷幕 */}
+            {/* --- 左侧帷幕 --- */}
             <motion.div
-                className="h-full relative origin-left shadow-[10px_0_30px_rgba(0,0,0,0.5)]"
+                className="h-full relative"
+                // 关键点：origin-left 让它向左侧收缩
+                style={{
+                    backgroundImage: velvetGradient,
+                    boxShadow: curtainShadow,
+                    transformOrigin: 'left center'
+                }}
                 initial={{ width: "50%" }}
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                // 使用更缓慢、更优雅的缓动曲线
-                transition={{ duration: 3.2, ease: [0.4, 0.0, 0.2, 1] }}
-                style={curtainStyle}
+                // 使用更自然的缓动：先慢后快再慢
+                transition={{ duration: 2.0, ease: [0.65, 0, 0.35, 1] }}
             >
-                {/* 纹理叠加层，增加布料颗粒感 */}
-                 <div className="absolute inset-0 mix-blend-overlay pointer-events-none" style={{ ...noiseStyle, opacity: 0.15 }}></div>
+                {/* 底部流苏/花边装饰 (增加高级感细节) */}
+                <div className="absolute bottom-0 w-full h-8 bg-gradient-to-t from-black/60 to-transparent" />
+                {/* 细微的噪点纹理，防止颜色太纯显得假 */}
+                <div className="absolute inset-0 bg-black/10 mix-blend-overlay"
+                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E")` }}
+                />
             </motion.div>
 
-            {/* 右侧帷幕 */}
+            {/* --- 右侧帷幕 --- */}
             <motion.div
-                className="h-full relative origin-right shadow-[-10px_0_30px_rgba(0,0,0,0.5)]"
+                className="h-full relative"
+                // 关键点：origin-right 让它向右侧收缩
+                style={{
+                    backgroundImage: velvetGradient,
+                    // 右侧阴影方向相反
+                    boxShadow: isNight
+                        ? 'inset 10px 0 20px rgba(0,0,0,0.8), -10px 0 30px rgba(0,0,0,0.5)'
+                        : 'inset 10px 0 20px rgba(50,0,0,0.7), -10px 0 30px rgba(0,0,0,0.4)',
+                    transformOrigin: 'right center'
+                }}
                 initial={{ width: "50%" }}
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                transition={{ duration: 3.2, ease: [0.4, 0.0, 0.2, 1] }}
-                style={curtainStyle}
+                transition={{ duration: 2.0, ease: [0.65, 0, 0.35, 1] }}
             >
-                <div className="absolute inset-0 mix-blend-overlay pointer-events-none" style={{ ...noiseStyle, opacity: 0.15 }}></div>
+                <div className="absolute bottom-0 w-full h-8 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute inset-0 bg-black/10 mix-blend-overlay"
+                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E")` }}
+                />
             </motion.div>
 
-            {/* 中间的提示文字 (带呼吸效果) */}
+            {/* --- 中间的金色开场文字 --- */}
             <AnimatePresence>
                 {!isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
+                        exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
                         transition={{ duration: 0.8 }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none text-center"
                     >
-                        {/* 一个装饰性的金色分割线 */}
-                        <div className="w-16 h-[1px] bg-yellow-500/50 mx-auto mb-6" />
-                        <h1 className="text-3xl md:text-5xl font-serif text-yellow-100/90 tracking-[0.2em] mb-4">
-                            GRAND OPENING
-                        </h1>
-                        <p className="text-xs md:text-sm text-yellow-200/60 tracking-[0.4em] uppercase animate-pulse font-light">
-                            Tap to begin our story
-                        </p>
-                        <div className="w-16 h-[1px] bg-yellow-500/50 mx-auto mt-6" />
+                        <div className="border-y border-yellow-500/30 py-6 px-12 bg-black/20 backdrop-blur-sm rounded-sm">
+                            <h1 className="text-4xl md:text-6xl font-serif text-yellow-100/90 tracking-[0.15em] drop-shadow-2xl">
+                                WELCOME
+                            </h1>
+                            <p className="mt-3 text-xs md:text-sm text-yellow-200/60 tracking-[0.4em] uppercase font-light">
+                                Tap to Open
+                            </p>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
