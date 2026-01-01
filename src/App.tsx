@@ -14,6 +14,13 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+// 噪声纹理样式（模拟布料颗粒感）
+const noiseStyle = {
+    backgroundImage: `url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.4"/></svg>')`,
+    backgroundRepeat: 'repeat',
+    backgroundPosition: 'center',
+};
+
 // --- 2. 资源定义 (鼠标图标 SVG) ---
 const BIRD_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5"/><path d="M10 18v3"/><path d="M14 17.75V21"/><path d="M8.2 6.5a4.2 4.2 0 0 1 7.6 0"/></svg>') 16 16, auto`;
 
@@ -33,49 +40,67 @@ const SoundManager = ({ isNight, curtainOpen }: { isNight: boolean, curtainOpen:
     return null;
 };
 
-// 🎉 礼花特效组件
-const ConfettiExplosion = ({ isActive }: { isActive: boolean }) => {
-    // 生成 50 个彩色粒子
+// 🎀 新版特效：从两侧吹入的礼花与彩带
+const SideBlownConfetti = ({ isActive }: { isActive: boolean }) => {
+    // 生成 60 个彩色粒子 (彩带片段和圆形纸屑)
     const particles = React.useMemo(() => {
-        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-        return Array.from({ length: 50 }).map((_, i) => ({
-            id: i,
-            x: 0,
-            y: 0,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            // 随机爆炸方向和距离
-            targetX: (Math.random() - 0.5) * 800,
-            targetY: (Math.random() - 0.5) * 800,
-            scale: Math.random() * 0.5 + 0.5,
-            rotation: Math.random() * 360
-        }));
-    }, []);
+        const colors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93', '#ffffff'];
+        return Array.from({ length: 60 }).map((_, i) => {
+            const isLeft = i % 2 === 0; // 偶数从左边出，奇数从右边出
+            const startX = isLeft ? -100 : window.innerWidth + 100; // 起始点在屏幕外
+            const startY = Math.random() * window.innerHeight; // 随机高度分布
+
+            // 目标点：向屏幕中央移动，Y轴随机飘动
+            const targetX = isLeft
+                ? Math.random() * (window.innerWidth * 0.6) // 左侧粒子飘到屏幕中右部
+                : window.innerWidth - Math.random() * (window.innerWidth * 0.6); // 右侧粒子飘到屏幕中左部
+
+            const targetY = startY + (Math.random() - 0.5) * 400; // Y轴上下随机漂浮
+
+            return {
+                id: i,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                // 随机形状：圆点或长条彩带
+                isRibbon: Math.random() > 0.6,
+                startX,
+                startY,
+                targetX,
+                targetY,
+                scale: Math.random() * 0.6 + 0.4,
+                rotation: Math.random() * 720 - 360, // 剧烈旋转
+                delay: Math.random() * 0.5 // 稍微错开出发时间，更自然
+            };
+        });
+    }, [isActive]); // 只有激活时才重新计算
 
     if (!isActive) return null;
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-[1000] flex items-center justify-center">
+        <div className="fixed inset-0 pointer-events-none z-[1000] overflow-hidden">
             {particles.map((p) => (
                 <motion.div
                     key={p.id}
-                    initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+                    initial={{ x: p.startX, y: p.startY, opacity: 0, scale: p.scale, rotate: 0 }}
                     animate={{
                         x: p.targetX,
                         y: p.targetY,
-                        scale: p.scale,
+                        opacity: [0, 1, 1, 0], // 出现->停留->消失
                         rotate: p.rotation,
-                        opacity: 0
                     }}
                     transition={{
-                        duration: 1.5,
-                        ease: "easeOut"
+                        duration: 3.5, // 飘动时间长一点，配合帷幕
+                        ease: [0.25, 0.46, 0.45, 0.94], // easeOutQuad
+                        delay: p.delay,
+                        times: [0, 0.1, 0.8, 1]
                     }}
                     style={{
+                        position: 'absolute',
                         backgroundColor: p.color,
-                        width: '10px',
-                        height: '10px',
-                        borderRadius: '50%',
-                        position: 'absolute'
+                        // 根据类型决定形状：彩带是长条，纸屑是圆点
+                        width: p.isRibbon ? '16px' : '10px',
+                        height: p.isRibbon ? '4px' : '10px',
+                        borderRadius: p.isRibbon ? '2px' : '50%',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                     }}
                 />
             ))}
@@ -85,61 +110,74 @@ const ConfettiExplosion = ({ isActive }: { isActive: boolean }) => {
 
 // --- 3. 组件定义 ---
 
-// 🎭 盛大开幕帷幕 (改造版)
-const TheatricalCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen: () => void; isNight: boolean }) => {
+// 🎭 升级版：极具质感的天鹅绒帷幕
+const LuxuriousCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen: () => void; isNight: boolean }) => {
+    // 定义白天(深红)和黑夜(深灰)的布料纹理
+    const fabricTexture = isNight
+        // 黑夜模式：深炭灰色的天鹅绒褶皱
+        ? `repeating-linear-gradient(90deg,
+            #18181b 0%, #27272a 5%, #18181b 10%, #09090b 15%, #18181b 20%)`
+        // 白天模式：皇家深红色的天鹅绒褶皱
+        : `repeating-linear-gradient(90deg,
+            #7f1d1d 0%, #991b1b 5%, #7f1d1d 10%, #450a0a 15%, #7f1d1d 20%)`;
+
+    const curtainStyle = {
+        backgroundImage: fabricTexture,
+        // 添加底部暗角，增加立体感
+        boxShadow: isNight
+            ? 'inset 0 -100px 150px -50px rgba(0,0,0,0.8), 0 0 50px rgba(0,0,0,0.5)'
+            : 'inset 0 -100px 150px -50px rgba(50,0,0,0.6), 0 0 50px rgba(0,0,0,0.3)'
+    };
+
     return (
         <motion.div
-            className="absolute inset-0 z-[999] flex overflow-hidden cursor-pointer"
-            onClick={onOpen} // 点击屏幕任何地方都会触发
-            initial={false}
+            className="absolute inset-0 z-[999] flex overflow-hidden cursor-pointer group"
+            onClick={onOpen}
             style={{ pointerEvents: isOpen ? 'none' : 'auto' }}
         >
-            {/* 左半边帷幕 */}
+            {/* 左侧帷幕 */}
             <motion.div
-                className={cn("h-full relative shadow-2xl origin-left", isNight ? "bg-zinc-900" : "bg-red-900")}
-                // 核心动画：宽度从 50% 变为 0%，实现向左收起
+                className="h-full relative origin-left shadow-[10px_0_30px_rgba(0,0,0,0.5)]"
+                initial={{ width: "50%" }}
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }} // 慢一点，更有仪式感
-                style={{
-                    backgroundImage: isNight
-                        ? 'linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%)'
-                        : 'linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%)'
-                }}
+                // 使用更缓慢、更优雅的缓动曲线
+                transition={{ duration: 3.2, ease: [0.4, 0.0, 0.2, 1] }}
+                style={curtainStyle}
             >
-                {/* 增加布料质感 */}
-                <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(0,0,0,0.3)_25px,transparent_30px)]" />
+                {/* 纹理叠加层，增加布料颗粒感 */}
+                 <div className="absolute inset-0 mix-blend-overlay pointer-events-none" style={{ ...noiseStyle, opacity: 0.15 }}></div>
             </motion.div>
 
-            {/* 右半边帷幕 */}
+            {/* 右侧帷幕 */}
             <motion.div
-                className={cn("h-full relative shadow-2xl origin-right", isNight ? "bg-zinc-900" : "bg-red-900")}
-                // 核心动画：宽度从 50% 变为 0%，实现向右收起
+                className="h-full relative origin-right shadow-[-10px_0_30px_rgba(0,0,0,0.5)]"
+                initial={{ width: "50%" }}
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                transition={{ duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                    backgroundImage: isNight
-                        ? 'linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%)'
-                        : 'linear-gradient(90deg, #7f1d1d 0%, #991b1b 50%, #7f1d1d 100%)'
-                }}
+                transition={{ duration: 3.2, ease: [0.4, 0.0, 0.2, 1] }}
+                style={curtainStyle}
             >
-                <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_20px,rgba(0,0,0,0.3)_25px,transparent_30px)]" />
+                <div className="absolute inset-0 mix-blend-overlay pointer-events-none" style={{ ...noiseStyle, opacity: 0.15 }}></div>
             </motion.div>
 
-            {/* 中间的文字提示 (未打开时显示) */}
+            {/* 中间的提示文字 (带呼吸效果) */}
             <AnimatePresence>
                 {!isOpen && (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/80 text-center z-50 pointer-events-none mix-blend-plus-lighter"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.1 }}
+                        transition={{ duration: 0.8 }}
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none text-center drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]"
                     >
-                        <h1 className="text-4xl md:text-6xl font-serif tracking-widest mb-4 drop-shadow-lg">
-                            OUR STORY
+                        {/* 一个装饰性的金色分割线 */}
+                        <div className="w-16 h-[1px] bg-yellow-500/50 mx-auto mb-6" />
+                        <h1 className="text-3xl md:text-5xl font-serif text-yellow-100/90 tracking-[0.2em] mb-4">
+                            GRAND OPENING
                         </h1>
-                        <p className="text-xs md:text-sm tracking-[0.5em] uppercase opacity-70 animate-pulse">
-                            Click to Open
+                        <p className="text-xs md:text-sm text-yellow-200/60 tracking-[0.4em] uppercase animate-pulse font-light">
+                            Tap to begin our story
                         </p>
+                        <div className="w-16 h-[1px] bg-yellow-500/50 mx-auto mt-6" />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -349,8 +387,8 @@ const AppContent: React.FC = () => {
             <SpotlightOverlay isNight={isNight} />
 
             {/* 盛大开幕：礼花 + 帷幕 */}
-            <ConfettiExplosion isActive={showConfetti} />
-            <TheatricalCurtain isOpen={curtainOpen} onOpen={handleOpenCurtain} isNight={isNight} />
+            <SideBlownConfetti isActive={showConfetti} />
+            <LuxuriousCurtain isOpen={curtainOpen} onOpen={handleOpenCurtain} isNight={isNight} />
 
             <AnimatePresence>{hearts.map(h => <HeartRipple key={h.id} id={h.id} x={h.x} y={h.y} onComplete={removeHeart} />)}</AnimatePresence>
 
