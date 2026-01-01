@@ -123,101 +123,71 @@ const SideBlownConfetti = ({ isActive }: { isActive: boolean }) => {
 
 // --- 3. 组件定义 ---
 
-// 🎭 终极版：皇家天鹅绒帷幕
+// 🎭 修正版：真·天鹅绒帷幕 (从中间向两侧收)
 const LuxuriousCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen: () => void; isNight: boolean }) => {
-    // 🎨 核心材质：模拟厚重天鹅绒的光影褶皱
-    // 通过不同透明度的黑色和白色叠加，制造出布料起伏的感觉
+    // 🎨 材质：深红/深黑天鹅绒，带垂直褶皱光影
     const velvetGradient = isNight
-        // 黑夜：深邃的炭黑/午夜蓝质感
-        ? `repeating-linear-gradient(90deg,
-            #09090b 0%,
-            #27272a 4%,
-            #09090b 8%,
-            #000000 12%,
-            #18181b 16%,
-            #27272a 20%
-          )`
-        // 白天：皇家深红，带金丝绒光泽
-        : `repeating-linear-gradient(90deg,
-            #450a0a 0%,
-            #7f1d1d 5%,
-            #991b1b 10%,
-            #450a0a 15%,
-            #7f1d1d 20%,
-            #b91c1c 25%,
-            #450a0a 30%
-          )`;
+        ? `repeating-linear-gradient(90deg, #09090b 0%, #18181b 5%, #27272a 10%, #18181b 15%, #09090b 20%)`
+        : `repeating-linear-gradient(90deg, #450a0a 0%, #7f1d1d 5%, #991b1b 10%, #7f1d1d 15%, #450a0a 20%)`;
 
-    // 阴影样式：增加布料边缘的立体厚度
-    const curtainShadow = isNight
-        ? 'inset -10px 0 20px rgba(0,0,0,0.8), 10px 0 30px rgba(0,0,0,0.5)'
-        : 'inset -10px 0 20px rgba(50,0,0,0.7), 10px 0 30px rgba(0,0,0,0.4)';
+    // 💡 阴影：给中间裂缝处加深阴影，制造厚度感
+    // 左帘右侧阴影，右帘左侧阴影
+    const shadowLeft = 'inset -20px 0 50px rgba(0,0,0,0.6)';
+    const shadowRight = 'inset 20px 0 50px rgba(0,0,0,0.6)';
 
     return (
         <motion.div
-            className="absolute inset-0 z-[999] flex overflow-hidden cursor-pointer"
+            className="absolute inset-0 z-[999] overflow-hidden cursor-pointer"
             onClick={onOpen}
             style={{ pointerEvents: isOpen ? 'none' : 'auto' }}
         >
-            {/* --- 左侧帷幕 --- */}
+            {/* === 左侧帷幕 (钉在左边) === */}
             <motion.div
-                className="h-full relative"
-                // 关键点：origin-left 让它向左侧收缩
+                className="absolute top-0 bottom-0 left-0 h-full z-10"
                 style={{
                     backgroundImage: velvetGradient,
-                    boxShadow: curtainShadow,
-                    transformOrigin: 'left center'
+                    boxShadow: shadowLeft,
+                    borderRight: '1px solid rgba(255,255,255,0.1)' // 微弱的高光边
                 }}
                 initial={{ width: "50%" }}
                 animate={{ width: isOpen ? "0%" : "50%" }}
-                // 使用更自然的缓动：先慢后快再慢
-                transition={{ duration: 2.0, ease: [0.65, 0, 0.35, 1] }}
+                transition={{ duration: 2.0, ease: [0.65, 0, 0.35, 1] }} // 贝塞尔曲线：先慢后快
             >
-                {/* 底部流苏/花边装饰 (增加高级感细节) */}
-                <div className="absolute bottom-0 w-full h-8 bg-gradient-to-t from-black/60 to-transparent" />
-                {/* 细微的噪点纹理，防止颜色太纯显得假 */}
-                <div className="absolute inset-0 bg-black/10 mix-blend-overlay"
-                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E")` }}
-                />
+                {/* 装饰：底部流苏阴影 */}
+                <div className="absolute bottom-0 w-full h-12 bg-gradient-to-t from-black/80 to-transparent" />
             </motion.div>
 
-            {/* --- 右侧帷幕 --- */}
+            {/* === 右侧帷幕 (钉在右边) === */}
             <motion.div
-                className="h-full relative"
-                // 关键点：origin-right 让它向右侧收缩
+                className="absolute top-0 bottom-0 right-0 h-full z-10"
                 style={{
                     backgroundImage: velvetGradient,
-                    // 右侧阴影方向相反
-                    boxShadow: isNight
-                        ? 'inset 10px 0 20px rgba(0,0,0,0.8), -10px 0 30px rgba(0,0,0,0.5)'
-                        : 'inset 10px 0 20px rgba(50,0,0,0.7), -10px 0 30px rgba(0,0,0,0.4)',
-                    transformOrigin: 'right center'
+                    boxShadow: shadowRight,
+                    borderLeft: '1px solid rgba(255,255,255,0.1)'
                 }}
                 initial={{ width: "50%" }}
                 animate={{ width: isOpen ? "0%" : "50%" }}
                 transition={{ duration: 2.0, ease: [0.65, 0, 0.35, 1] }}
             >
-                <div className="absolute bottom-0 w-full h-8 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute inset-0 bg-black/10 mix-blend-overlay"
-                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E")` }}
-                />
+                <div className="absolute bottom-0 w-full h-12 bg-gradient-to-t from-black/80 to-transparent" />
             </motion.div>
 
-            {/* --- 中间的金色开场文字 --- */}
+            {/* === 开场文字 (金碧辉ZX效果) === */}
             <AnimatePresence>
                 {!isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+                        exit={{ opacity: 0, scale: 1.2, filter: 'blur(10px)' }}
                         transition={{ duration: 0.8 }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none text-center"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 text-center pointer-events-none"
                     >
-                        <div className="border-y border-yellow-500/30 py-6 px-12 bg-black/20 backdrop-blur-sm rounded-sm">
-                            <h1 className="text-4xl md:text-6xl font-serif text-yellow-100/90 tracking-[0.15em] drop-shadow-2xl">
+                        <div className="border border-yellow-500/30 px-10 py-6 bg-black/40 backdrop-blur-sm shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                            <h1 className="text-4xl md:text-6xl font-serif text-yellow-100/90 tracking-[0.2em] drop-shadow-2xl">
                                 WELCOME
                             </h1>
-                            <p className="mt-3 text-xs md:text-sm text-yellow-200/60 tracking-[0.4em] uppercase font-light">
+                            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-4" />
+                            <p className="text-xs text-yellow-200/60 tracking-[0.5em] uppercase animate-pulse">
                                 Tap to Open
                             </p>
                         </div>
