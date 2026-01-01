@@ -37,7 +37,7 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                 <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-[2px] -translate-x-1/2 overflow-hidden">
                     {/* 基础底色 */}
                     <div className={`w-full h-full ${isNight ? 'bg-white/10' : 'bg-slate-200'}`} />
-                    {/* 流光 */}
+                    {/* 流光动画 */}
                     <motion.div 
                         className={`absolute top-0 left-0 w-full h-[30%] ${isNight ? 'bg-gradient-to-b from-transparent via-amber-500 to-transparent' : 'bg-gradient-to-b from-transparent via-pink-400 to-transparent'}`}
                         animate={{ top: ['-30%', '130%'] }}
@@ -45,13 +45,12 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                     />
                 </div>
 
-                <div className="space-y-24"> {/* 增加间距，避免拥挤 */}
+                <div className="space-y-24"> {/* 增加垂直间距，避免拥挤 */}
                     {events.map((event, index) => {
                         const Icon = icons[event.icon] || Heart;
-                        // 修改逻辑：偶数(0,2,4)在左边，奇数(1,3,5)在右边
-                        // 原来的逻辑 flex-row-reverse 会导致偶数在右边，所以这里我们反过来思考
-                        // 我们希望 index 0 是左边 -> 不需要 reverse
-                        // 我们希望 index 1 是右边 -> 需要 reverse
+                        
+                        // 修正逻辑：Index 0 (最新) 在左边，Index 1 在右边
+                        // isRightSide = true 代表卡片在右边
                         const isRightSide = index % 2 !== 0; 
 
                         return (
@@ -66,7 +65,7 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                                 {/* --- 2. 内容卡片区域 (50% 宽度) --- */}
                                 <div className={`flex-1 w-full pl-12 md:pl-0 ${isRightSide ? 'md:pr-16' : 'md:pl-16'}`}>
                                     <div className={`
-                                        relative p-8 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl
+                                        relative p-8 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group
                                         ${isNight 
                                             ? 'bg-white/5 border-white/10 hover:border-amber-500/30 hover:shadow-[0_10px_30px_-10px_rgba(245,158,11,0.1)]' 
                                             : 'bg-white/80 border-slate-100 shadow-sm hover:border-pink-200 hover:shadow-[0_10px_30px_-10px_rgba(244,114,182,0.2)]'
@@ -89,18 +88,20 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                                             {event.title}
                                         </h3>
                                         
-                                        {/* 强制左对齐，保证阅读舒适度 */}
+                                        {/* 核心修复：强制全部左对齐，保证阅读舒适度 */}
                                         <p className={`text-sm leading-7 font-light text-left ${isNight ? 'text-white/60' : 'text-slate-600'}`}>
                                             {event.description}
                                         </p>
 
                                         {/* ➡️ 横向连接线 (仅桌面版显示) */}
+                                        {/* 这条线连接了卡片和中间的轴，解决了"卡片悬空"的问题 */}
                                         <div className={`hidden md:block absolute top-1/2 -translate-y-1/2 h-[1px] w-16 
                                             ${isRightSide ? '-right-16' : '-left-16'}
                                             ${isNight ? 'bg-gradient-to-r from-amber-500/50 to-transparent' : 'bg-gradient-to-r from-pink-400/50 to-transparent'}
                                             ${isRightSide ? 'rotate-180' : ''}
                                         `}>
-                                            <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${isNight ? 'bg-amber-500' : 'bg-pink-400'}`} />
+                                            {/* 连接点 */}
+                                            <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${isNight ? 'bg-amber-500' : 'bg-pink-400'}`} />
                                         </div>
                                     </div>
                                 </div>
@@ -109,16 +110,16 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                                 <div className="absolute left-4 md:left-1/2 -translate-x-1/2 flex items-center justify-center">
                                     {/* 外发光光环 */}
                                     <motion.div 
-                                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
+                                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.1, 0.5] }}
                                         transition={{ duration: 2, repeat: Infinity }}
-                                        className={`absolute w-12 h-12 rounded-full blur-md ${isNight ? 'bg-amber-500/30' : 'bg-pink-400/30'}`}
+                                        className={`absolute w-14 h-14 rounded-full blur-md ${isNight ? 'bg-amber-500/30' : 'bg-pink-400/30'}`}
                                     />
                                     {/* 实体图标球 */}
                                     <div className={`
-                                        relative w-10 h-10 rounded-full border-4 flex items-center justify-center z-10 shadow-lg
+                                        relative w-12 h-12 rounded-full border-4 flex items-center justify-center z-10 shadow-lg
                                         ${isNight ? 'bg-[#18181b] border-amber-500 text-amber-500' : 'bg-white border-pink-400 text-pink-500'}
                                     `}>
-                                        <Icon size={16} fill="currentColor" />
+                                        <Icon size={20} fill="currentColor" />
                                     </div>
                                 </div>
 
