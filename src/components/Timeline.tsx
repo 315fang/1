@@ -19,7 +19,7 @@ const icons: Record<string, LucideIcon> = {
 
 const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
     return (
-        <div className="w-full max-w-5xl mx-auto py-32 px-4 md:px-8">
+        <div className="w-full max-w-6xl mx-auto py-32 px-4 md:px-8">
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -45,11 +45,11 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                     />
                 </div>
 
-                <div className="space-y-24"> {/* 增加垂直间距，避免拥挤 */}
+                <div className="space-y-24">
                     {events.map((event, index) => {
                         const Icon = icons[event.icon] || Heart;
                         
-                        // 修正逻辑：Index 0 (最新) 在左边，Index 1 在右边
+                        // 🔄 逻辑修正：Index 0 (最新) 在左边，Index 1 在右边
                         // isRightSide = true 代表卡片在右边
                         const isRightSide = index % 2 !== 0; 
 
@@ -70,10 +70,12 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                                             ? 'bg-white/5 border-white/10 hover:border-amber-500/30 hover:shadow-[0_10px_30px_-10px_rgba(245,158,11,0.1)]' 
                                             : 'bg-white/80 border-slate-100 shadow-sm hover:border-pink-200 hover:shadow-[0_10px_30px_-10px_rgba(244,114,182,0.2)]'
                                         }
+                                        /* 🖊️ 核心修复：右侧卡片文字右对齐，左侧卡片文字左对齐 (移动端强制左对齐) */
+                                        ${isRightSide ? 'md:text-right text-left' : 'text-left'}
                                     `}>
-                                        {/* 装饰角标 */}
+                                        {/* 装饰角标 (位置随左右变化) */}
                                         <div className={`absolute top-0 w-16 h-16 opacity-20 transition-opacity group-hover:opacity-100
-                                            ${isRightSide ? 'right-0 rounded-bl-full' : 'left-0 rounded-br-full'}
+                                            ${isRightSide ? 'left-0 rounded-br-full' : 'right-0 rounded-bl-full'}
                                             ${isNight ? 'bg-gradient-to-br from-amber-500/20' : 'bg-gradient-to-br from-pink-400/20'}
                                         `} />
 
@@ -88,20 +90,18 @@ const Timeline: React.FC<TimelineProps> = ({ events, isNight }) => {
                                             {event.title}
                                         </h3>
                                         
-                                        {/* 核心修复：强制全部左对齐，保证阅读舒适度 */}
-                                        <p className={`text-sm leading-7 font-light text-left ${isNight ? 'text-white/60' : 'text-slate-600'}`}>
+                                        <p className={`text-sm leading-7 font-light ${isNight ? 'text-white/60' : 'text-slate-600'}`}>
                                             {event.description}
                                         </p>
 
-                                        {/* ➡️ 横向连接线 (仅桌面版显示) */}
-                                        {/* 这条线连接了卡片和中间的轴，解决了"卡片悬空"的问题 */}
+                                        {/* ➡️ 横向连接线 (仅桌面版显示) - 解决"漂浮感" */}
                                         <div className={`hidden md:block absolute top-1/2 -translate-y-1/2 h-[1px] w-16 
-                                            ${isRightSide ? '-right-16' : '-left-16'}
+                                            ${isRightSide ? '-left-16' : '-right-16'}
                                             ${isNight ? 'bg-gradient-to-r from-amber-500/50 to-transparent' : 'bg-gradient-to-r from-pink-400/50 to-transparent'}
-                                            ${isRightSide ? 'rotate-180' : ''}
+                                            ${isRightSide ? '' : 'rotate-180'}
                                         `}>
                                             {/* 连接点 */}
-                                            <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${isNight ? 'bg-amber-500' : 'bg-pink-400'}`} />
+                                            <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full ${isNight ? 'bg-amber-500' : 'bg-pink-400'}`} />
                                         </div>
                                     </div>
                                 </div>
