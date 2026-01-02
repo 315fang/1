@@ -335,6 +335,8 @@
                 <button class="tab active" onclick="switchTab('profile')">👫 情侣信息</button>
                 <button class="tab" onclick="switchTab('photos')">📷 照片管理</button>
                 <button class="tab" onclick="switchTab('timeline')">📅 时间轴</button>
+                <button class="tab" onclick="switchTab('messages')">💌 留言管理</button>
+                <button class="tab" onclick="switchTab('settings')">⚙️ 网站设置</button>
             </div>
 
             <!-- 情侣信息 -->
@@ -386,6 +388,29 @@
             <div id="timeline-panel" class="panel">
                 <button class="add-btn" onclick="openTimelineModal()">+ 添加新事件</button>
                 <div id="timeline-list"></div>
+            </div>
+
+            <!-- 留言管理 -->
+            <div id="messages-panel" class="panel">
+                <button class="add-btn" onclick="openMessageModal()">+ 添加新留言</button>
+                <div id="messages-list"></div>
+            </div>
+
+            <!-- 网站设置 -->
+            <div id="settings-panel" class="panel">
+                <h3 style="margin-bottom: 20px; color: #ff6b9d;">🔮 彩蛋设置</h3>
+                <div class="form-group">
+                    <label>玫瑰彩蛋文案（连续点击头像5次触发）</label>
+                    <input type="text" id="easter-egg-message" placeholder="我永远爱你 ❤️">
+                </div>
+                <button class="btn btn-primary" onclick="saveEasterEggMessage()" style="margin-bottom: 30px;">💾
+                    保存彩蛋文案</button>
+
+                <hr style="border-color: #333; margin: 30px 0;">
+
+                <h3 style="margin-bottom: 20px; color: #ff6b9d;">🎵 音乐歌单</h3>
+                <button class="add-btn" onclick="openMusicModal()">+ 添加新歌曲</button>
+                <div id="music-list"></div>
             </div>
         </div>
     </div>
@@ -455,6 +480,38 @@
         </div>
     </div>
 
+    <!-- 留言弹窗 -->
+    <div class="modal" id="message-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加留言</h3>
+                <button class="modal-close" onclick="closeModal('message-modal')">&times;</button>
+            </div>
+            <div class="form-group"><label>留言内容 *</label><textarea id="message-content"
+                    placeholder="今天也要开心哦！💕"></textarea></div>
+            <div class="form-group"><label>生效日期</label><input type="date" id="message-date"></div>
+            <button class="btn btn-primary" onclick="saveMessage()">保存</button>
+        </div>
+    </div>
+
+    <!-- 音乐弹窗 -->
+    <div class="modal" id="music-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="music-modal-title">添加歌曲</h3>
+                <button class="modal-close" onclick="closeModal('music-modal')">&times;</button>
+            </div>
+            <input type="hidden" id="music-id">
+            <div class="form-group"><label>歌曲名称 *</label><input type="text" id="music-title" placeholder="告白气球"></div>
+            <div class="form-group"><label>歌手 *</label><input type="text" id="music-artist" placeholder="周杰伦"></div>
+            <div class="form-group"><label>音乐URL *</label><input type="text" id="music-url"
+                    placeholder="https://...mp3"></div>
+            <div class="form-group"><label>封面图URL</label><input type="text" id="music-cover"
+                    placeholder="https://...jpg"></div>
+            <button class="btn btn-primary" onclick="saveMusic()">保存</button>
+        </div>
+    </div>
+
     <script>
         const API = '/api';
         let token = localStorage.getItem('admin_token') || '';
@@ -491,7 +548,7 @@
 
         function headers() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
 
-        async function loadAllData() { await Promise.all([loadProfile(), loadPhotos(), loadTimeline()]); }
+        async function loadAllData() { await Promise.all([loadProfile(), loadPhotos(), loadTimeline(), loadMessages(), loadSettings()]); }
 
         async function loadProfile() {
             const res = await fetch(`${API}/profile`);
@@ -696,6 +753,125 @@
             t.textContent = msg;
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 3000);
+        }
+
+        // ========== 留言管理 ==========
+        async function loadMessages() {
+            const res = await fetch(`${API}/messages`);
+            const messages = await res.json();
+            const list = document.getElementById('messages-list');
+            list.innerHTML = messages.map(m => `
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <h4>${m.content.substring(0, 50)}${m.content.length > 50 ? '...' : ''}</h4>
+                        <p>生效日期: ${m.effective_date || '立即生效'}</p>
+                    </div>
+                    <div class="list-item-actions">
+                        <button class="btn btn-danger" onclick="deleteMessage(${m.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openMessageModal() {
+            document.getElementById('message-content').value = '';
+            document.getElementById('message-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('message-modal').classList.add('active');
+        }
+
+        async function saveMessage() {
+            const body = {
+                content: document.getElementById('message-content').value,
+                effective_date: document.getElementById('message-date').value
+            };
+            if (!body.content) { toast('请输入留言内容', true); return; }
+            await fetch(`${API}/admin/messages`, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
+            closeModal('message-modal');
+            loadMessages();
+            toast('留言添加成功！');
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm('确定删除这条留言吗？')) return;
+            await fetch(`${API}/admin/messages/${id}`, { method: 'DELETE', headers: headers() });
+            loadMessages();
+            toast('已删除');
+        }
+
+        // ========== 网站设置 ==========
+        let musicPlaylist = [];
+
+        async function loadSettings() {
+            const res = await fetch(`${API}/settings`);
+            const settings = await res.json();
+            document.getElementById('easter-egg-message').value = settings.easter_egg_message || '';
+            musicPlaylist = settings.music_playlist || [];
+            renderMusicList();
+        }
+
+        async function saveEasterEggMessage() {
+            const value = document.getElementById('easter-egg-message').value;
+            await fetch(`${API}/admin/settings/easter_egg_message`, { method: 'PUT', headers: headers(), body: JSON.stringify({ value }) });
+            toast('彩蛋文案已保存！');
+        }
+
+        function renderMusicList() {
+            const list = document.getElementById('music-list');
+            list.innerHTML = musicPlaylist.map((m, idx) => `
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <h4>🎵 ${m.title}</h4>
+                        <p>${m.artist}</p>
+                    </div>
+                    <div class="list-item-actions">
+                        <button class="btn btn-secondary" onclick="editMusic(${idx})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteMusic(${idx})">删除</button>
+                    </div>
+                </div>
+            `).join('') || '<p style="color: #888; text-align: center;">暂无歌曲，点击上方按钮添加</p>';
+        }
+
+        function openMusicModal(song = null, idx = -1) {
+            document.getElementById('music-modal-title').textContent = song ? '编辑歌曲' : '添加歌曲';
+            document.getElementById('music-id').value = idx;
+            document.getElementById('music-title').value = song?.title || '';
+            document.getElementById('music-artist').value = song?.artist || '';
+            document.getElementById('music-url').value = song?.url || '';
+            document.getElementById('music-cover').value = song?.cover || '';
+            document.getElementById('music-modal').classList.add('active');
+        }
+
+        function editMusic(idx) { openMusicModal(musicPlaylist[idx], idx); }
+
+        async function saveMusic() {
+            const idx = parseInt(document.getElementById('music-id').value);
+            const song = {
+                id: idx >= 0 ? musicPlaylist[idx].id : Date.now(),
+                title: document.getElementById('music-title').value,
+                artist: document.getElementById('music-artist').value,
+                url: document.getElementById('music-url').value,
+                cover: document.getElementById('music-cover').value
+            };
+            if (!song.title || !song.artist || !song.url) { toast('请填写必填项', true); return; }
+
+            if (idx >= 0) {
+                musicPlaylist[idx] = song;
+            } else {
+                musicPlaylist.push(song);
+            }
+
+            await fetch(`${API}/admin/settings/music_playlist`, { method: 'PUT', headers: headers(), body: JSON.stringify({ value: musicPlaylist }) });
+            closeModal('music-modal');
+            renderMusicList();
+            toast('歌曲已保存！');
+        }
+
+        async function deleteMusic(idx) {
+            if (!confirm('确定删除这首歌曲吗？')) return;
+            musicPlaylist.splice(idx, 1);
+            await fetch(`${API}/admin/settings/music_playlist`, { method: 'PUT', headers: headers(), body: JSON.stringify({ value: musicPlaylist }) });
+            renderMusicList();
+            toast('已删除');
         }
     </script>
 </body>

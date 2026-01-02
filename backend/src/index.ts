@@ -13,6 +13,7 @@ import timeline from './routes/timeline.js';
 import auth, { authMiddleware } from './routes/auth.js';
 import upload from './routes/upload.js';
 import messages from './routes/messages.js';
+import settings from './routes/settings.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -42,6 +43,7 @@ app.route('/api/profile', profile);
 app.route('/api/timeline', timeline);
 app.route('/api/auth', auth);
 app.route('/api/messages', messages);
+app.route('/api/settings', settings);
 
 // 为兼容前端现有代码，保留 /api/artworks 路由
 app.get('/api/artworks', (c) => {
@@ -116,6 +118,60 @@ adminApi.delete('/timeline/:id', async (c) => {
 
 // 图片上传（需认证）
 adminApi.route('/upload', upload);
+
+// 设置管理（需认证）
+adminApi.put('/settings/:key', async (c) => {
+    const key = c.req.param('key');
+    const body = await c.req.json();
+    const value = typeof body.value === 'string' ? body.value : JSON.stringify(body.value);
+
+    const Database = (await import('better-sqlite3')).default;
+    const { fileURLToPath } = await import('url');
+    const { dirname, join } = await import('path');
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const db = new Database(join(__dirname, '../data.db'));
+
+    db.prepare(`
+        INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now', 'localtime'))
+        ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = datetime('now', 'localtime')
+    `).run(key, value, value);
+
+    return c.json({ success: true, message: '设置已更新' });
+});
+
+// 留言管理（需认证）
+adminApi.post('/messages', async (c) => {
+    const body = await c.req.json();
+    const { content, effective_date } = body;
+
+    const Database = (await import('better-sqlite3')).default;
+    const { fileURLToPath } = await import('url');
+    const { dirname, join } = await import('path');
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const db = new Database(join(__dirname, '../data.db'));
+
+    const result = db.prepare(`
+        INSERT INTO messages (content, effective_date) VALUES (?, ?)
+    `).run(content, effective_date || new Date().toISOString().split('T')[0]);
+
+    return c.json({ id: result.lastInsertRowid, message: '创建成功' });
+});
+
+adminApi.delete('/messages/:id', async (c) => {
+    const id = c.req.param('id');
+
+    const Database = (await import('better-sqlite3')).default;
+    const { fileURLToPath } = await import('url');
+    const { dirname, join } = await import('path');
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const db = new Database(join(__dirname, '../data.db'));
+
+    db.prepare('DELETE FROM messages WHERE id = ?').run(id);
+    return c.json({ message: '删除成功' });
+});
 
 app.route('/api/admin', adminApi);
 

@@ -38,5 +38,16 @@ export const api = {
         const response = await fetch(`${API_BASE_URL}/timeline`);
         if (!response.ok) throw new Error('Failed to fetch timeline');
         return await response.json();
+    },
+
+    // 获取网站配置
+    getSettings: async (): Promise<{ easter_egg_message?: string; music_playlist?: any[] }> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/settings`);
+            if (!response.ok) return {};
+            return await response.json();
+        } catch {
+            return {};
+        }
     }
 };

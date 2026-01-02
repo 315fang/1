@@ -334,6 +334,7 @@ const AppContent: React.FC = () => {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [photos, setPhotos] = useState<Photo[]>([]);
     const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+    const [settings, setSettings] = useState<{ easter_egg_message?: string; music_playlist?: any[] }>({});
     const [loading, setLoading] = useState(true);
 
     const [lightboxItem, setLightboxItem] = useState<Photo | null>(null);
@@ -369,15 +370,17 @@ const AppContent: React.FC = () => {
         const loadAll = async () => {
             try {
                 // 并行加载所有数据
-                const [pData, phData, tlData] = await Promise.all([
+                const [pData, phData, tlData, settingsData] = await Promise.all([
                     api.getProfile().catch(() => null), // 允许 Profile 失败
                     api.getPhotos(),
-                    api.getTimeline()
+                    api.getTimeline(),
+                    api.getSettings()
                 ]);
 
                 if (pData) setProfile(pData);
                 setPhotos(phData);
                 setTimeline(tlData);
+                setSettings(settingsData);
             } catch (err) {
                 console.error("加载失败:", err);
             } finally {
@@ -485,7 +488,10 @@ const AppContent: React.FC = () => {
             </AnimatePresence>
 
             {/* 🎵 音乐播放器 */}
-            <MusicPlayer isNight={isNight} />
+            <MusicPlayer
+                isNight={isNight}
+                playlist={settings.music_playlist}
+            />
 
             {/* 💌 留言信箱 */}
             <Mailbox isNight={isNight} />
@@ -494,7 +500,7 @@ const AppContent: React.FC = () => {
             <RoseEasterEgg
                 isActive={easterEggActive}
                 onClose={() => setEasterEggActive(false)}
-                message="我永远爱你 ❤️"
+                message={settings.easter_egg_message || "我永远爱你 ❤️"}
             />
         </div>
     );
