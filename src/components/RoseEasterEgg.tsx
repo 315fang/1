@@ -130,9 +130,9 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
     // 生成三层花瓣
     const petalGroups = useMemo(() => {
         const layers = [
-            { count: 5, size: 50, delayBase: 0.5 },   // 内层
-            { count: 5, size: 70, delayBase: 0.25 },  // 中层
-            { count: 5, size: 90, delayBase: 0 },     // 外层
+            { count: 5, size: 55, delayBase: 0.5 },   // 内层 - 稍大一点覆盖中心
+            { count: 5, size: 75, delayBase: 0.25 },  // 中层
+            { count: 5, size: 95, delayBase: 0 },     // 外层
         ];
 
         const allPetals: any[] = [];
@@ -220,10 +220,10 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
                             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
                         >
                             <div
-                                className="w-10 h-10 rounded-full"
+                                className="w-12 h-12 rounded-full"
                                 style={{
                                     background: 'radial-gradient(circle at 40% 40%, #fff9c4 0%, #ffeb3b 40%, #ffc107 100%)',
-                                    boxShadow: '0 0 25px rgba(255, 235, 59, 0.8)',
+                                    boxShadow: '0 0 30px rgba(255, 235, 59, 0.9)',
                                 }}
                             />
                         </motion.div>
