@@ -203,23 +203,6 @@ const LuxuriousCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen
     );
 };
 
-// 用于背景特效的组件
-const SakuraItem = ({ p }: { p: any }) => (
-    <motion.div
-        className="absolute bg-pink-300/60 rounded-full pointer-events-none"
-        initial={{ y: -50, x: p.initialX, rotate: 0, opacity: 0 }}
-        animate={{ y: "100vh", x: p.initialX + (Math.random() * 100 - 50), rotate: 360, opacity: [0, 0.8, 0] }}
-        transition={{ duration: p.duration, repeat: Infinity, ease: "linear", delay: p.delay }}
-        style={{ width: p.size, height: p.size, borderRadius: "50% 0 50% 0" }}
-    />
-);
-
-const SakuraRain = ({ isActive }: { isActive: boolean }) => {
-    const particles = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({ id: i, initialX: Math.random() * window.innerWidth, size: Math.random() * 8 + 4, duration: Math.random() * 5 + 5, delay: Math.random() * 5 })), []);
-    if (!isActive) return null;
-    return <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">{particles.map((p) => <SakuraItem key={p.id} p={p} />)}</div>;
-};
-
 const FireflyItem = ({ p }: { p: any }) => (
     <motion.div
         initial={{ opacity: 0, scale: 0 }}
@@ -435,7 +418,7 @@ const AppContent: React.FC = () => {
 
             <AnimatePresence>{hearts.map(h => <HeartRipple key={h.id} id={h.id} x={h.x} y={h.y} onComplete={removeHeart} />)}</AnimatePresence>
 
-            {isNight ? <Fireflies isActive={showEffects} /> : <SakuraRain isActive={showEffects} />}
+            {isNight ? <Fireflies isActive={showEffects} /> : <SakuraRainPro isActive={showEffects} />}
 
             {/* 拉绳控制 */}
             <PullCord side="left" label={isNight ? "开灯" : "关灯"} icon={isNight ? <Sun /> : <Moon />} y={leftY} onTrigger={() => setIsNight(!isNight)} isDark={isNight} />
