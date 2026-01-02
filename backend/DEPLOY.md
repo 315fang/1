@@ -49,10 +49,18 @@ nano .env
 ```
 
 修改内容：
-```
+```bash
+# 管理后台密码
 ADMIN_PASSWORD=你的管理密码
 PORT=3001
+
+# 阿里云 OSS 配置（使用 ECS RAM 角色认证）
+OSS_BUCKET=resour
+OSS_REGION=oss-cn-hangzhou
+# 注意: 不需要配置 AccessKey，ECS 会自动从实例元数据获取凭证
 ```
+
+> ⚠️ **重要**：确保 ECS 实例已绑定具有 OSS 权限的 RAM 角色！
 
 ---
 

@@ -11,6 +11,7 @@ import photos from './routes/photos.js';
 import profile from './routes/profile.js';
 import timeline from './routes/timeline.js';
 import auth, { authMiddleware } from './routes/auth.js';
+import upload from './routes/upload.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -110,6 +111,9 @@ adminApi.delete('/timeline/:id', async (c) => {
     timelineDB.delete(parseInt(id));
     return c.json({ message: '删除成功' });
 });
+
+// 图片上传（需认证）
+adminApi.route('/upload', upload);
 
 app.route('/api/admin', adminApi);
 

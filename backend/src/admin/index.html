@@ -1,91 +1,342 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💕 情侣网站管理后台</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e5e5e5; min-height: 100vh; }
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        h1 { text-align: center; padding: 30px 0; font-weight: 300; letter-spacing: 4px; }
-        h1 span { color: #ff6b9d; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 30px 0;
+            font-weight: 300;
+            letter-spacing: 4px;
+        }
+
+        h1 span {
+            color: #ff6b9d;
+        }
+
         /* 登录面板 */
-        #login-panel { max-width: 400px; margin: 100px auto; padding: 40px; background: #1a1a1a; border-radius: 16px; border: 1px solid #333; }
-        #login-panel h2 { text-align: center; margin-bottom: 30px; font-weight: 300; }
-        #login-panel input { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid #333; border-radius: 8px; background: #0a0a0a; color: #fff; font-size: 16px; }
-        #login-panel button { width: 100%; padding: 14px; background: linear-gradient(135deg, #ff6b9d, #c44569); color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: transform 0.2s; }
-        #login-panel button:hover { transform: scale(1.02); }
-        
+        #login-panel {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 1px solid #333;
+        }
+
+        #login-panel h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        #login-panel input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #0a0a0a;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        #login-panel button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #login-panel button:hover {
+            transform: scale(1.02);
+        }
+
         /* 主面板 */
-        #main-panel { display: none; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .tab { padding: 12px 24px; background: transparent; border: 1px solid #333; color: #888; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-        .tab.active, .tab:hover { background: #ff6b9d; color: #fff; border-color: #ff6b9d; }
-        
-        .panel { display: none; animation: fadeIn 0.3s; }
-        .panel.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
+        #main-panel {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active,
+        .tab:hover {
+            background: #ff6b9d;
+            color: #fff;
+            border-color: #ff6b9d;
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* 表单样式 */
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #888; font-size: 14px; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px; background: #1a1a1a; color: #fff; font-size: 14px; }
-        .form-group textarea { min-height: 100px; resize: vertical; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        
-        .btn { padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
-        .btn-primary { background: linear-gradient(135deg, #ff6b9d, #c44569); color: #fff; }
-        .btn-secondary { background: #333; color: #fff; }
-        .btn-danger { background: #dc3545; color: #fff; }
-        .btn:hover { transform: scale(1.02); opacity: 0.9; }
-        
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
         /* 列表样式 */
-        .list-item { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .list-item-info h4 { margin-bottom: 5px; }
-        .list-item-info p { color: #888; font-size: 14px; }
-        .list-item-actions { display: flex; gap: 10px; }
-        .list-item-actions button { padding: 8px 16px; font-size: 12px; }
-        
-        .add-btn { width: 100%; padding: 15px; border: 2px dashed #333; background: transparent; color: #888; border-radius: 12px; cursor: pointer; margin-bottom: 20px; transition: all 0.3s; }
-        .add-btn:hover { border-color: #ff6b9d; color: #ff6b9d; }
-        
+        .list-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item-info h4 {
+            margin-bottom: 5px;
+        }
+
+        .list-item-info p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .list-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .list-item-actions button {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed #333;
+            background: transparent;
+            color: #888;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            border-color: #ff6b9d;
+            color: #ff6b9d;
+        }
+
         /* 弹窗 */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: #1a1a1a; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-close { background: none; border: none; color: #888; font-size: 24px; cursor: pointer; }
-        
-        .toast { position: fixed; bottom: 30px; right: 30px; padding: 15px 25px; background: #22c55e; color: #fff; border-radius: 8px; animation: slideIn 0.3s; z-index: 200; }
-        .toast.error { background: #dc3545; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        
-        .logout-btn { position: absolute; top: 20px; right: 20px; }
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 25px;
+            background: #22c55e;
+            color: #fff;
+            border-radius: 8px;
+            animation: slideIn 0.3s;
+            z-index: 200;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>💕 <span>情侣网站</span> 管理后台</h1>
-        
+
         <!-- 登录面板 -->
         <div id="login-panel">
             <h2>🔐 管理员登录</h2>
             <input type="password" id="password" placeholder="请输入管理密码" onkeypress="if(event.key==='Enter')login()">
             <button onclick="login()">登 录</button>
         </div>
-        
+
         <!-- 主面板 -->
         <div id="main-panel">
             <button class="btn btn-secondary logout-btn" onclick="logout()">退出登录</button>
-            
+
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('profile')">👫 情侣信息</button>
                 <button class="tab" onclick="switchTab('photos')">📷 照片管理</button>
                 <button class="tab" onclick="switchTab('timeline')">📅 时间轴</button>
             </div>
-            
+
             <!-- 情侣信息 -->
             <div id="profile-panel" class="panel active">
                 <div class="form-row">
@@ -124,13 +375,13 @@
                 </div>
                 <button class="btn btn-primary" onclick="saveProfile()">💾 保存信息</button>
             </div>
-            
+
             <!-- 照片管理 -->
             <div id="photos-panel" class="panel">
                 <button class="add-btn" onclick="openPhotoModal()">+ 添加新照片</button>
                 <div id="photos-list"></div>
             </div>
-            
+
             <!-- 时间轴 -->
             <div id="timeline-panel" class="panel">
                 <button class="add-btn" onclick="openTimelineModal()">+ 添加新事件</button>
@@ -138,7 +389,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- 照片弹窗 -->
     <div class="modal" id="photo-modal">
         <div class="modal-content">
@@ -149,14 +400,34 @@
             <input type="hidden" id="photo-id">
             <div class="form-group"><label>标题 *</label><input type="text" id="photo-title"></div>
             <div class="form-group"><label>英文标题</label><input type="text" id="photo-en-title"></div>
-            <div class="form-group"><label>图片URL *</label><input type="text" id="photo-url" placeholder="https://oss..."></div>
+
+            <!-- 新增：图片上传区域 -->
+            <div class="form-group">
+                <label>上传图片</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="photo-file" accept="image/*" style="display: none;">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('photo-file').click()" id="upload-btn">
+                        📁 选择图片
+                    </button>
+                    <span id="upload-status" style="color: #888; font-size: 14px;"></span>
+                </div>
+                <div id="photo-preview" style="margin-top: 10px; display: none;">
+                    <img id="preview-img"
+                        style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #333;">
+                </div>
+            </div>
+
+            <div class="form-group"><label>图片URL *</label><input type="text" id="photo-url" placeholder="上传后自动填充，或手动输入">
+            </div>
             <div class="form-group"><label>日期 *</label><input type="date" id="photo-date"></div>
             <div class="form-group"><label>描述</label><textarea id="photo-desc"></textarea></div>
-            <div class="form-group"><label>标签 (逗号分隔)</label><input type="text" id="photo-tags" placeholder="旅行, 美食, 纪念日"></div>
+            <div class="form-group"><label>标签 (逗号分隔)</label><input type="text" id="photo-tags"
+                    placeholder="旅行, 美食, 纪念日"></div>
             <button class="btn btn-primary" onclick="savePhoto()">保存</button>
         </div>
     </div>
-    
+
     <!-- 时间轴弹窗 -->
     <div class="modal" id="timeline-modal">
         <div class="modal-content">
@@ -187,10 +458,10 @@
     <script>
         const API = '/api';
         let token = localStorage.getItem('admin_token') || '';
-        
+
         // 检查登录状态
         if (token) { showMainPanel(); loadAllData(); }
-        
+
         async function login() {
             const pwd = document.getElementById('password').value;
             try {
@@ -207,21 +478,21 @@
                 }
             } catch (e) { toast('登录失败', true); }
         }
-        
+
         function logout() { token = ''; localStorage.removeItem('admin_token'); location.reload(); }
         function showMainPanel() { document.getElementById('login-panel').style.display = 'none'; document.getElementById('main-panel').style.display = 'block'; }
-        
+
         function switchTab(name) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById(`${name}-panel`).classList.add('active');
         }
-        
+
         function headers() { return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
-        
+
         async function loadAllData() { await Promise.all([loadProfile(), loadPhotos(), loadTimeline()]); }
-        
+
         async function loadProfile() {
             const res = await fetch(`${API}/profile`);
             const data = await res.json();
@@ -233,7 +504,7 @@
             document.getElementById('site_title').value = data.site_title || '';
             document.getElementById('bio').value = data.bio || '';
         }
-        
+
         async function saveProfile() {
             const body = {
                 name1: document.getElementById('name1').value,
@@ -247,7 +518,7 @@
             await fetch(`${API}/admin/profile`, { method: 'PUT', headers: headers(), body: JSON.stringify(body) });
             toast('保存成功！');
         }
-        
+
         async function loadPhotos() {
             const res = await fetch(`${API}/photos`);
             const photos = await res.json();
@@ -265,7 +536,7 @@
                 </div>
             `).join('');
         }
-        
+
         function openPhotoModal(photo = null) {
             document.getElementById('photo-modal-title').textContent = photo ? '编辑照片' : '添加照片';
             document.getElementById('photo-id').value = photo?.id || '';
@@ -275,10 +546,66 @@
             document.getElementById('photo-date').value = photo?.date || '';
             document.getElementById('photo-desc').value = photo?.description || '';
             document.getElementById('photo-tags').value = (photo?.tags || []).join(', ');
+            // 重置上传状态
+            document.getElementById('photo-file').value = '';
+            document.getElementById('upload-status').textContent = '';
+            document.getElementById('photo-preview').style.display = 'none';
             document.getElementById('photo-modal').classList.add('active');
         }
         function editPhoto(p) { openPhotoModal(p); }
-        
+
+        // 图片上传处理
+        document.getElementById('photo-file').addEventListener('change', async function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 显示预览
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('preview-img').src = e.target.result;
+                document.getElementById('photo-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // 上传到 OSS
+            const statusEl = document.getElementById('upload-status');
+            const uploadBtn = document.getElementById('upload-btn');
+            statusEl.textContent = '⏳ 上传中...';
+            statusEl.style.color = '#fbbf24';
+            uploadBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('folder', 'photos');
+
+                const res = await fetch(`${API}/admin/upload`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    document.getElementById('photo-url').value = result.url;
+                    statusEl.textContent = '✅ 上传成功';
+                    statusEl.style.color = '#22c55e';
+                    toast('图片上传成功！');
+                } else {
+                    statusEl.textContent = '❌ ' + (result.error || '上传失败');
+                    statusEl.style.color = '#dc3545';
+                    toast(result.error || '上传失败', true);
+                }
+            } catch (err) {
+                statusEl.textContent = '❌ 网络错误';
+                statusEl.style.color = '#dc3545';
+                toast('上传失败: ' + err.message, true);
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        });
+
         async function savePhoto() {
             const id = document.getElementById('photo-id').value;
             const body = {
@@ -298,14 +625,14 @@
             loadPhotos();
             toast('保存成功！');
         }
-        
+
         async function deletePhoto(id) {
             if (!confirm('确定删除这张照片吗？')) return;
             await fetch(`${API}/admin/photos/${id}`, { method: 'DELETE', headers: headers() });
             loadPhotos();
             toast('已删除');
         }
-        
+
         async function loadTimeline() {
             const res = await fetch(`${API}/timeline`);
             const events = await res.json();
@@ -324,7 +651,7 @@
                 </div>
             `).join('');
         }
-        
+
         function openTimelineModal(event = null) {
             document.getElementById('timeline-modal-title').textContent = event ? '编辑事件' : '添加事件';
             document.getElementById('event-id').value = event?.id || '';
@@ -335,7 +662,7 @@
             document.getElementById('timeline-modal').classList.add('active');
         }
         function editTimeline(e) { openTimelineModal(e); }
-        
+
         async function saveTimeline() {
             const id = document.getElementById('event-id').value;
             const body = {
@@ -353,16 +680,16 @@
             loadTimeline();
             toast('保存成功！');
         }
-        
+
         async function deleteTimeline(id) {
             if (!confirm('确定删除这个事件吗？')) return;
             await fetch(`${API}/admin/timeline/${id}`, { method: 'DELETE', headers: headers() });
             loadTimeline();
             toast('已删除');
         }
-        
+
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        
+
         function toast(msg, isError = false) {
             const t = document.createElement('div');
             t.className = 'toast' + (isError ? ' error' : '');
@@ -372,4 +699,5 @@
         }
     </script>
 </body>
+
 </html>
