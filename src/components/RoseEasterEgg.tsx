@@ -42,31 +42,6 @@ const SakuraPetal = ({ delay, rotation, scale, layer }: { delay: number; rotatio
     );
 };
 
-// 飘落的粉色粒子
-const SakuraParticle = ({ x, y, delay }: { x: number; y: number; delay: number }) => (
-    <motion.div
-        initial={{ opacity: 0, scale: 0, x: 0, y: 0, rotate: 0 }}
-        animate={{
-            opacity: [0, 0.8, 0],
-            scale: [0, 1, 0.4],
-            x: x + (Math.random() - 0.5) * 150,
-            y: y + 300, // 向下飘落
-            rotate: 360
-        }}
-        transition={{
-            duration: 5 + Math.random() * 2,
-            delay,
-            ease: "linear",
-            repeat: Infinity
-        }}
-        className="absolute w-3 h-3 bg-pink-100/40 rounded-full"
-        style={{
-            clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-            filter: 'blur(1px)',
-        }}
-    />
-);
-
 const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
     isActive,
     onClose,
@@ -93,15 +68,6 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
             }
         });
         return allPetals;
-    }, []);
-
-    const particles = useMemo(() => {
-        return Array.from({ length: 40 }).map((_, i) => ({
-            id: i,
-            x: (Math.random() - 0.5) * 800,
-            y: (Math.random() - 0.5) * 600 - 300,
-            delay: Math.random() * 5,
-        }));
     }, []);
 
     useEffect(() => {
@@ -137,13 +103,6 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
                             background: 'radial-gradient(circle, rgba(255,183,197,0.3) 0%, transparent 70%)',
                         }}
                     />
-
-                    {/* 飘落花瓣粒子 */}
-                    <div className="absolute inset-0 pointer-events-none">
-                        {particles.map(p => (
-                            <SakuraParticle key={p.id} x={p.x} y={p.y} delay={p.delay} />
-                        ))}
-                    </div>
 
                     {/* 樱花主体 */}
                     <div className="relative flex items-center justify-center scale-110 md:scale-150">

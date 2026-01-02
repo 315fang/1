@@ -11,6 +11,7 @@ import MusicPlayer from './components/MusicPlayer';
 import RoseEasterEgg from './components/RoseEasterEgg';
 import Mailbox from './components/Mailbox';
 import { api } from './services/api';
+import { SakuraRainPro } from './components/SakuraRainPro';
 import { Photo, Profile, TimelineEvent } from './types';
 
 // --- 1. 工具函数 ---
@@ -487,6 +488,9 @@ const AppContent: React.FC = () => {
                 )}
             </AnimatePresence>
 
+            {/* 🌸 樱花背景雨 (Pro版) */}
+            <SakuraRainPro isActive={easterEggActive} />
+
             {/* 🎵 音乐播放器 */}
             <MusicPlayer
                 isNight={isNight}
@@ -496,7 +500,7 @@ const AppContent: React.FC = () => {
             {/* 💌 留言信箱 */}
             <Mailbox isNight={isNight} />
 
-            {/* 🔮 玫瑰彩蛋 */}
+            {/* 🔮 樱花彩蛋 */}
             <RoseEasterEgg
                 isActive={easterEggActive}
                 onClose={() => setEasterEggActive(false)}
