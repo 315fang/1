@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence, useMotionValue, useMotionTemplate, useTransform } from 'framer-motion';
-import { Sun, Moon, Sparkles, Flower, ChevronLeft, ChevronRight, Heart, Maximize2, User, Mail, Instagram } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useMotionTemplate, useTransform, PanInfo } from 'framer-motion';
+import { Sun, Moon, Sparkles, Flower, ChevronLeft, ChevronRight, Heart, Maximize2 } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import Lightbox from './components/Lightbox';
 import CoupleHeader from './components/CoupleHeader';
 import Timeline from './components/Timeline';
+import RandomMemory from './components/RandomMemory';
+import MusicPlayer from './components/MusicPlayer';
+import RoseEasterEgg from './components/RoseEasterEgg';
+import Mailbox from './components/Mailbox';
 import { api } from './services/api';
 import { Photo, Profile, TimelineEvent } from './types';
 
@@ -339,6 +343,28 @@ const AppContent: React.FC = () => {
     const rightY = useMotionValue(0);
     const [hearts, setHearts] = useState<{ id: number, x: number, y: number }[]>([]);
 
+    // 🔮 彩蛋状态
+    const [easterEggActive, setEasterEggActive] = useState(false);
+    const avatarClickCount = React.useRef(0);
+    const avatarClickTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // 处理头像点击（彩蛋触发）
+    const handleAvatarClick = () => {
+        avatarClickCount.current += 1;
+        if (avatarClickCount.current >= 5) {
+            setEasterEggActive(true);
+            avatarClickCount.current = 0;
+        }
+
+        // 重置计时器：2秒内没有继续点击就重置计数
+        if (avatarClickTimer.current) {
+            clearTimeout(avatarClickTimer.current);
+        }
+        avatarClickTimer.current = setTimeout(() => {
+            avatarClickCount.current = 0;
+        }, 2000);
+    };
+
     useEffect(() => {
         const loadAll = async () => {
             try {
@@ -414,7 +440,12 @@ const AppContent: React.FC = () => {
             {/* 核心内容区 */}
             <main className="relative z-20 pb-20">
                 {/* 1. 情侣头部信息 */}
-                <CoupleHeader profile={displayProfile} isNight={isNight} />
+                <CoupleHeader profile={displayProfile} isNight={isNight} onAvatarClick={handleAvatarClick} />
+
+                {/* 随机回忆按钮 */}
+                <div className="flex justify-center py-6">
+                    <RandomMemory photos={photos} timeline={timeline} isNight={isNight} />
+                </div>
 
                 {/* 2. 照片画廊 (3D 轮播) */}
                 {photos.length > 0 && (
@@ -452,6 +483,19 @@ const AppContent: React.FC = () => {
                     />
                 )}
             </AnimatePresence>
+
+            {/* 🎵 音乐播放器 */}
+            <MusicPlayer isNight={isNight} />
+
+            {/* 💌 留言信箱 */}
+            <Mailbox isNight={isNight} />
+
+            {/* 🔮 玫瑰彩蛋 */}
+            <RoseEasterEgg
+                isActive={easterEggActive}
+                onClose={() => setEasterEggActive(false)}
+                message="我永远爱你 ❤️"
+            />
         </div>
     );
 };

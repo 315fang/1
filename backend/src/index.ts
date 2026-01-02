@@ -12,6 +12,7 @@ import profile from './routes/profile.js';
 import timeline from './routes/timeline.js';
 import auth, { authMiddleware } from './routes/auth.js';
 import upload from './routes/upload.js';
+import messages from './routes/messages.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -40,6 +41,7 @@ app.route('/api/photos', photos);
 app.route('/api/profile', profile);
 app.route('/api/timeline', timeline);
 app.route('/api/auth', auth);
+app.route('/api/messages', messages);
 
 // 为兼容前端现有代码，保留 /api/artworks 路由
 app.get('/api/artworks', (c) => {
