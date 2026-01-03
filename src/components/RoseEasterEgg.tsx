@@ -221,7 +221,7 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
                             style={{
                                 left: '50%',
                                 top: '50%',
-                                transform: 'translate(calc(-50% - 8px), calc(-50% - 8px))',
+                                transform: 'translate(calc(-50% - 16px), calc(-50% - 16px))',
                             }}
                         >
                             <div
