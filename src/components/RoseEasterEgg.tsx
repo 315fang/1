@@ -212,17 +212,12 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
                             />
                         ))}
 
-                        {/* 花蕊 */}
+                        {/* 花蕊 - 使用 inset-0 + flex 实现完美居中 */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.8, type: "spring", stiffness: 300 }}
-                            className="absolute z-30"
-                            style={{
-                                left: '50%',
-                                top: '50%',
-                                transform: 'translate(calc(-50% - 32px), calc(-50% - 32px))',
-                            }}
+                            className="absolute inset-0 z-30 flex items-center justify-center"
                         >
                             <div
                                 className="w-12 h-12 rounded-full"
