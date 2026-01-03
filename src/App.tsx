@@ -24,7 +24,7 @@ const BIRD_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/
 
 const TORCH_CURSOR = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 10 20"/><path d="m11 12-2 3"/><path d="m13 12 2 3"/><path d="M8.2 6.5a4.2 4.2 0 0 1 7.6 0"/><circle cx="12" cy="12" r="9" stroke-opacity="0.3"/></svg>') 16 16, auto`;
 
-// 🔊 升级版音效管理器 (1.5秒掌声)
+// 🔊 升级版音效管理器 (5秒掌声)
 const SoundManager = ({ isNight, curtainOpen }: { isNight: boolean, curtainOpen: boolean }) => {
     useEffect(() => {
         if (curtainOpen) {
@@ -33,8 +33,8 @@ const SoundManager = ({ isNight, curtainOpen }: { isNight: boolean, curtainOpen:
             applause.volume = 0.8;
             applause.play().catch(e => console.log("音频播放被拦截", e));
 
-            // 1.5秒后开始淡出并停止
-            const stopTime = 1500;
+            // 5秒后开始淡出并停止
+            const stopTime = 5000;
             const fadeInterval = setInterval(() => {
                 if (applause.volume > 0.1) {
                     applause.volume -= 0.1; // 快速淡出
@@ -45,7 +45,7 @@ const SoundManager = ({ isNight, curtainOpen }: { isNight: boolean, curtainOpen:
                 }
             }, 50); // 每50ms降低一次音量，制造淡出效果
 
-            // 确保在1.5秒多一点的时候彻底停掉
+            // 确保在5秒多一点的时候彻底停掉
             setTimeout(() => {
                 if (!applause.paused) {
                     applause.pause();
