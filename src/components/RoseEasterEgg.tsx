@@ -138,7 +138,7 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
         const allPetals: any[] = [];
         layers.forEach((layer, layerIdx) => {
             const angleStep = 360 / layer.count;
-            const angleOffset = layerIdx * (360 / layer.count / 2); // 每层错开半个间距
+            const angleOffset = layerIdx * 12; // 每层错开12°，使花瓣均匀对称分布
 
             for (let i = 0; i < layer.count; i++) {
                 allPetals.push({
