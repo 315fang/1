@@ -161,11 +161,12 @@ const CoupleHeader: React.FC<CoupleHeaderProps> = ({ profile, isNight, onAvatarC
                 </motion.div>
 
                 {/* 中间心形链接 + 进度环 */}
-                <div className="flex flex-col items-center gap-2 z-10 relative">
-                    {/* 进度环背景 */}
-                    <div className="absolute">
+                <div className="relative z-10 w-20 h-20 flex items-center justify-center">
+                    {/* 进度环背景 - 居中定位 */}
+                    <div className="absolute inset-0 flex items-center justify-center">
                         <ProgressRing progress={yearProgress} isNight={isNight} />
                     </div>
+                    {/* 爱心图标 - 居中定位 */}
                     <motion.div
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -173,6 +174,7 @@ const CoupleHeader: React.FC<CoupleHeaderProps> = ({ profile, isNight, onAvatarC
                     >
                         <Heart fill="currentColor" size={24} />
                     </motion.div>
+                    {/* 连接线 */}
                     <div className={`h-[2px] w-20 absolute top-1/2 -translate-y-1/2 -z-10 ${isNight ? 'bg-gradient-to-r from-transparent via-amber-500/30 to-transparent' : 'bg-gradient-to-r from-transparent via-pink-400/30 to-transparent'}`}></div>
                 </div>
 
@@ -235,8 +237,8 @@ const CoupleHeader: React.FC<CoupleHeaderProps> = ({ profile, isNight, onAvatarC
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs mt-2 ${isNight
-                            ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
-                            : 'bg-pink-100 text-pink-600 border border-pink-200'
+                        ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                        : 'bg-pink-100 text-pink-600 border border-pink-200'
                         }`}
                 >
                     <Target size={12} />

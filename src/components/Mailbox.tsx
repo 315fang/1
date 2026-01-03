@@ -77,8 +77,8 @@ const Mailbox: React.FC<MailboxProps> = ({ isNight, apiBaseUrl }) => {
                 whileTap={{ scale: 0.9 }}
                 onClick={handleOpen}
                 className={`fixed bottom-6 right-6 z-[100] w-14 h-14 rounded-full shadow-lg flex items-center justify-center ${isNight
-                        ? 'bg-amber-500 text-black hover:bg-amber-400'
-                        : 'bg-pink-500 text-white hover:bg-pink-600'
+                    ? 'bg-amber-500 text-black hover:bg-amber-400'
+                    : 'bg-pink-500 text-white hover:bg-pink-600'
                     }`}
                 style={{
                     boxShadow: isNight
@@ -124,8 +124,8 @@ const Mailbox: React.FC<MailboxProps> = ({ isNight, apiBaseUrl }) => {
                                     animate={{ rotateX: 180 }}
                                     transition={{ delay: 0.3, duration: 0.5 }}
                                     className={`absolute top-0 left-0 right-0 h-20 origin-top ${isNight
-                                            ? 'bg-gradient-to-b from-zinc-700 to-zinc-800'
-                                            : 'bg-gradient-to-b from-amber-200 to-amber-100'
+                                        ? 'bg-gradient-to-b from-zinc-700 to-zinc-800'
+                                        : 'bg-gradient-to-b from-amber-200 to-amber-100'
                                         }`}
                                     style={{
                                         clipPath: 'polygon(0 0, 50% 100%, 100% 0)',
@@ -135,17 +135,18 @@ const Mailbox: React.FC<MailboxProps> = ({ isNight, apiBaseUrl }) => {
                                 />
 
                                 {/* 蜡封章 */}
-                                <motion.div
-                                    initial={{ scale: 0, rotate: -180 }}
-                                    animate={{ scale: 1, rotate: 0 }}
-                                    transition={{ delay: 0.5, type: 'spring' }}
-                                    className="absolute top-2 left-1/2 -translate-x-1/2 z-10"
-                                >
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${isNight ? 'bg-red-700' : 'bg-red-600'
-                                        }`}>
-                                        <Heart size={20} className="text-white" fill="white" />
-                                    </div>
-                                </motion.div>
+                                <div className="absolute top-2 left-0 right-0 z-10 flex justify-center">
+                                    <motion.div
+                                        initial={{ scale: 0, rotate: -180 }}
+                                        animate={{ scale: 1, rotate: 0 }}
+                                        transition={{ delay: 0.5, type: 'spring' }}
+                                    >
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${isNight ? 'bg-red-700' : 'bg-red-600'
+                                            }`}>
+                                            <Heart size={20} className="text-white" fill="white" />
+                                        </div>
+                                    </motion.div>
+                                </div>
 
                                 {/* 信纸内容 */}
                                 <motion.div

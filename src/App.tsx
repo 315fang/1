@@ -185,7 +185,7 @@ const LuxuriousCurtain = ({ isOpen, onOpen, isNight }: { isOpen: boolean; onOpen
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 1.2, filter: 'blur(10px)' }}
                         transition={{ duration: 0.8 }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 text-center pointer-events-none"
+                        className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
                     >
                         <div className="border border-yellow-500/30 px-10 py-6 bg-black/40 backdrop-blur-sm shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                             <h1 className="text-4xl md:text-6xl font-serif text-yellow-100/90 tracking-[0.2em] drop-shadow-2xl">
