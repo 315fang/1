@@ -217,7 +217,12 @@ const RoseEasterEgg: React.FC<SakuraEasterEggProps> = ({
                             initial={{ opacity: 0, scale: 0 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.8, type: "spring", stiffness: 300 }}
-                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
+                            className="absolute z-30"
+                            style={{
+                                left: '50%',
+                                top: '50%',
+                                transform: 'translate(calc(-50% - 8px), calc(-50% - 8px))',
+                            }}
                         >
                             <div
                                 className="w-12 h-12 rounded-full"
