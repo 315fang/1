@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useMotionTemplate, useTransfor
 import { Sun, Moon, Sparkles, Flower, ChevronLeft, ChevronRight, Heart, Maximize2 } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { Analytics } from '@vercel/analytics/react';
 import Lightbox from './components/Lightbox';
 import CoupleHeader from './components/CoupleHeader';
 import Timeline from './components/Timeline';
@@ -502,8 +503,11 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 
 export default function App() {
     return (
-        <ErrorBoundary>
-            <AppContent />
-        </ErrorBoundary>
+        <>
+            <ErrorBoundary>
+                <AppContent />
+            </ErrorBoundary>
+            <Analytics />
+        </>
     );
 }
